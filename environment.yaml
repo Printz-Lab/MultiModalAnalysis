@@ -1,0 +1,13 @@
+name: pl_analysis
+channels:
+  - defaults
+dependencies:
+  - python=3.10.12
+  - numpy
+  - pandas
+  - matplotlib
+  - dill
+  - scipy
+  - bokeh
+  - tqdm
+  - pip

@@ -141,18 +141,18 @@ def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, 
         for index, unc in enumerate(peak_unc):
             unc.append(std_error[index])
 # =============================================================================
-#         if peak_in_frame:
-#             if std_error[0] != None:
-#                 if std_error[0] < 1:
-#                     # for higher efficiency, the init_params are now changed to the 
-#                     # fit values for next scan. However, if the initial frame is 
-#                     # wrongly identified to contain a peak, this might lead to problems
-#                     init_params['amplitude'] = params[0]
-#                     init_params['center'] = params[1]
-#                     init_params['sigma'] = params[2]
-#                     init_params['fraction'] = params[3]
-#                     init_params['slope'] = params[4]
-#                     init_params['intercept'] = params[5]
+        if peak_in_frame:
+            if std_error[0] != None:
+                if std_error[0] < 1:
+                    # for higher efficiency, the init_params are now changed to the 
+                    # fit values for next scan. However, if the initial frame is 
+                    # wrongly identified to contain a peak, this might lead to problems
+                    init_params['amplitude'] = params[0]
+                    init_params['center'] = params[1]
+                    init_params['sigma'] = params[2]
+                    init_params['fraction'] = params[3]
+                    init_params['slope'] = params[4]
+                    init_params['intercept'] = params[5]
 # =============================================================================
                 
     fig, ax1 = plt.subplots(figsize=(7, 5))
@@ -403,13 +403,14 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
     dfPeaks['Fit-Time_' + name_d] = df_xCutFit
     for i in range(0,int(numGauss)):
         colPos = 'Peak' + str(i+1) + 'Pos_' + name_d
+        colAmp = 'Peak' + str(i+1) + 'Amplitude_' + name_d
         colArea = 'Peak' + str(i+1) + 'Area_' + name_d
         colFWHM = 'Peak' + str(i+1) + 'FWHM_' + name_d
         colAlphas = 'Peak' + str(i+1) + 'Alpha_' + name_d
-        data = np.array([peakArea[:,i], popt[:,int(numGauss)+i], peakFWHM[:,i], popt[:,3*int(numGauss)+i]])
+        data = np.array([peakArea[:,i],popt[:,i], popt[:,int(numGauss)+i], peakFWHM[:,i], popt[:,3*int(numGauss)+i]])
         dfTemp = pd.DataFrame(
             data.T,
-            columns=[colArea, colPos, colFWHM, colAlphas])
+            columns=[colArea, colAmp, colPos, colFWHM, colAlphas])
         dfPeaks = pd.concat([dfPeaks, dfTemp], axis=1)
     dfPeaks = dfPeaks.fillna('nan')
 
