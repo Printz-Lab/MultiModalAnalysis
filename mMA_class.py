@@ -348,7 +348,7 @@ class MMAnalysis(object):
                 peakUpperTH[i] = energyPL[-1]
                 
         # show_every = int(len(timePL)/100)     # int n, shows every n'th frame with fit
-        show_every = int(5)     # int n, shows every n'th frame with fit
+        show_every = int(1)     # int n, shows every n'th frame with fit
 
         mMA_fits.plFitting(self.plParams, energyPL, timePL, intPL, show_every, numGauss, peakLowerTH, self.inputDict, peakUpperTH, estPeakWidth, minPeakWidth, maxPeakWidth, sampleName, savePath)
         
