@@ -29,7 +29,7 @@ if testObj.genParams['Logging']:
         else:
             #Finding the start time automatically
             testObj.suggestedLogTimeIdx = next(x for x, val in enumerate(testObj.logDataRaw.Spin_Motor) if val > 0) 
-            #print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
+            print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
 
             testObj.plotLog(True, True, testObj.sampleName, testObj.outputPath, testObj.logDataRaw)
         

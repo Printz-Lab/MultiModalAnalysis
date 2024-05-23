@@ -57,6 +57,7 @@ class MMAnalysis(object):
                     logFile = glob.glob(folder + '/Logfile' + "/*.csv")[0]
                 else:
                     logFile = glob.glob(folder + '/Logfile' + "/*.txt")[0]
+                    print(f'logfiles: {logFile}')
                     
                 self.logDataRaw = self.getLog_data(logFile)
 
@@ -223,7 +224,7 @@ class MMAnalysis(object):
             logDataTemp = logDataTemp[self.logTimeStartIdx-1:self.logTimeEndIdx+1,:]
             logDataTemp[:,0] = logDataTemp[:,0] - logDataTemp[0,0]
 
-            self.logDataPost = pd.DataFrame(logDataTemp, columns = ['Time','Pyrometer','Spin_Motor', 'Dispense X'])
+            self.logDataPost = pd.DataFrame(logDataTemp, columns = ['Time','Pyrometer','Spin_Motor', 'Dispense X', 'Gas Quenching'])
             
         else:
                 

@@ -86,9 +86,9 @@ def getPLData(plParams, PL_files, folder, logTimes):
             fileNum = fileTemp3[-1].split('.')[0]
             
             if len(fileNum) == 3:
-                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + fileTemp3[2] + ' ' + '00' + fileTemp3[3]))
+                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + '00' + fileTemp3[2]))
             elif len(fileNum) == 4:
-                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + fileTemp3[2] + ' ' + '0' + fileTemp3[3]))
+                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + '0' + fileTemp3[2]))
         
     else:
     
@@ -128,7 +128,7 @@ def getPLData(plParams, PL_files, folder, logTimes):
         
     elif plParams['Labview']:
         # defining X-axis using the timestamps from the logfile
-        df_x = logTimes
+        df_x = np.linspace(logTimes[0], logTimes[-1], nFiles)
         # reading all files
         df_all = np.concatenate([pd.read_csv(f, sep="\t", header=1) for f in tqdm(PL_files)], axis=1)
     else:
@@ -216,7 +216,12 @@ def getLogData(logParams, logFile):
         
     else:
         if logParams['LabviewPL']:
-            names=np.array(['Time of Day', 'Time', 'Image Counts', 'Pyrometer', 'Dispense X', 'Dispense Z', 'Gas Quenching', 'Sine', 'Spin_Motor', 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Power', '2D Image', 'Spectrometer'])
+            names=np.array(['Time of Day', 'Time', 'Image Counts', 'Pyrometer', 'Spin_Motor', 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Watts',
+       'BK Resistance', 'Dispense X', 'Dispense Z', 'Gas Quenching'])
+            renaming = {
+                'Time (s)' : 'Time',
+                'Spin Motor': 'Spin_Motor',
+            }
         else:
             names=np.array(['Time of Day', 'Time', 'Pyrometer', 'Dispense X', 'Dispense Z', 'Gas Quenching', 'Spin_Motor', 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Power', 'Sine'])
             
@@ -225,9 +230,10 @@ def getLogData(logParams, logFile):
                 if l.startswith('DATA'):
                     header = i+1
                     break
-                
-        logData = pd.read_csv(logFile, sep='\t', header = 0, names = names, skiprows = header)
-        logSelection = ['Time', 'Pyrometer', 'Spin_Motor', 'Dispense X']
+         
+        logData = pd.read_table(logFile, header = 0, skiprows = header)
+        logData = logData.rename(columns = renaming)
+        logSelection = ['Time', 'Pyrometer', 'Spin_Motor', 'Dispense X', 'Gas Quenching']
         logDataSelect = logData[logSelection]
             
     return logDataSelect

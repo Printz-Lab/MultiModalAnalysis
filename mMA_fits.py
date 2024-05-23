@@ -368,7 +368,7 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
             plt.ylabel('Intensity (a.u.)')
             plt.title('Time: ' + str(df_xCutFit[i]))
             plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-            plt.show(block=False)
+            plt.show(block=plParams['ShowPlots'])
             plt.pause(1)
             
             if plParams['logplots']:
@@ -380,7 +380,7 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
                 plt.ylabel('Log-Intensity (a.u.)')
                 plt.title('Time: ' + str(df_xCutFit[i]))
                 plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_Log_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-                plt.show(block=False)
+                # plt.show(block=False)
                 plt.pause(1)
 
     # Plotting the time-evolution of the peak-positions and intensities
