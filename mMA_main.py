@@ -34,7 +34,8 @@ if testObj.genParams['Logging']:
             testObj.plotLog(True, True, testObj.sampleName, testObj.outputPath, testObj.logDataRaw)
         
             testObj.plotLog(False, True, testObj.sampleName, testObj.outputPath, testObj.logDataPost)
-
+            print(testObj.logDataPost)
+            print(type(testObj.logDataPost))
         #if input('Continue? (y/n) ') == 'y':
         if tk.messagebox.askquestion("test", "Continue?") == 'yes':
             continueMain = True
@@ -100,7 +101,6 @@ if testObj.genParams['PL']:
         testObj.plotPL(True, testObj.sampleName, testObj.outputPath, testObj.plEnergyRaw, testObj.plTimeRaw, testObj.plIntensityERaw, testObj.plWavelengthRaw, testObj.plIntensityRaw, testObj.plIntensityERawLog)
         
         testObj.plotPL(False, testObj.sampleName, testObj.outputPath, testObj.plEnergyPost, testObj.plTimePost, testObj.plIntensityPost, testObj.plWavelengthRaw, testObj.plIntensityRaw, testObj.plIntensityLogPost)
-        
         #if input('Continue? (y/n) ') == 'y':
         if tk.messagebox.askquestion("test", "Continue?") == 'yes':
             continueMain = True
@@ -156,6 +156,15 @@ elif testObj.genParams['GIWAXS'] and testObj.genParams['Logging']:
     testObj.plotStacked(testObj.genParams, testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost, [], [], [], testObj.logDataPost, testObj.logTimeEndIdx)
     
     testObj.saveHTMLs(testObj.genParams, [], [], [], testObj.giwaxsTimePost, testObj.giwaxsQPost, testObj.giwaxsIntensityPost, testObj.logDataPost, testObj.outputPath, testObj.sampleName)
+
+elif testObj.genParams['PL'] and testObj.genParams['Logging']:
+    
+    print("_____________________________________________________________")
+    print("Working on the stacked plots. This may take a minute...")
+    
+    # testObj.plotStacked(testObj.genParams, testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost, [], [], [], testObj.logDataPost, testObj.logTimeEndIdx)
+    
+    testObj.saveHTMLs(testObj.genParams, testObj.plTimePost, testObj.plEnergyPost, testObj.plIntensityPost, [], [], [], testObj.logDataPost, testObj.outputPath, testObj.sampleName)
 
 elif testObj.genParams['PL']:
     

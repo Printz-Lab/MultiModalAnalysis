@@ -108,7 +108,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             # result.plot(data_kws={'markersize': 1})
             plt.legend()
             plt.title('Frame: ' + str(frame_index))
-            #plt.show()
+            # plt.show()
         params = [None]*6
         std_error = [None]*3
         redchi = [None]
@@ -362,14 +362,18 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
             
             for ii in range(0, int(numGauss)):
                 plt.plot(df_yCut, sum_of_Voigts(df_yCut, *[popt[i,ii], popt[i,int(numGauss)+ii], popt[i,2*int(numGauss)+ii], popt[i,3*int(numGauss)+ii], 0, 0]), '--', label='Peak ' + str(ii+1))
-            plt.plot(df_yCut, background(df_yCut, *[popt[i,-2], popt[i,-1]]), 'k--', label='Background')              
-            plt.legend()
-            plt.xlabel('Energy (eV)')
-            plt.ylabel('Intensity (a.u.)')
-            plt.title('Time: ' + str(df_xCutFit[i]))
-            plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-            plt.show(block=plParams['ShowPlots'])
-            plt.pause(1)
+                plt.plot(df_yCut, background(df_yCut, *[popt[i,-2], popt[i,-1]]), 'k--', label='Background')              
+                plt.legend()
+                plt.xlabel('Energy (eV)')
+                plt.ylabel('Intensity (a.u.)')
+                plt.title('Time: ' + str(df_xCutFit[i]))
+                plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
+                if plParams['ShowPlots']:
+                    plt.show(block=False)
+                    fignums = plt.get_fignums()
+                    if len(fignums) > 5:
+                        plt.close(fignums[0])
+                plt.pause(1)
             
             if plParams['logplots']:
                 plt.figure(figsize=(6, 5))
@@ -379,8 +383,12 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
                 plt.xlabel('Energy (eV)')
                 plt.ylabel('Log-Intensity (a.u.)')
                 plt.title('Time: ' + str(df_xCutFit[i]))
-                plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_Log_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-                # plt.show(block=False)
+                plt.savefig(os.path.join(name + '/fits/Log/', str(name_d) + '_PL-fit_Log_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
+                if plParams['ShowPlots']:
+                    plt.show(block=False)
+                    fignums = plt.get_fignums()
+                    if len(fignums) > 5:
+                        plt.close(fignums[0])
                 plt.pause(1)
 
     # Plotting the time-evolution of the peak-positions and intensities
@@ -397,6 +405,7 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
         ax1.yaxis.set_major_locator(yticks)
         fig.suptitle('Fit Results Peak ' + str(i+1) + ' ' + name_d, fontsize=14)
         fig.legend()
+        plt.show()
         
     # collecting the fit results in a dataframe
     dfPeaks = pd.DataFrame()

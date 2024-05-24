@@ -41,6 +41,7 @@ class MMAnalysis(object):
             self.sampleName = ntpath.basename(folder)
             os.makedirs(folder + '/output', exist_ok=True)
             os.makedirs(folder + '/output/fits', exist_ok=True)
+            os.makedirs(folder + '/output/fits/Log', exist_ok=True)
             self.outputPath = folder + '/output'
 
             if self.genParams['GIWAXS']:
@@ -48,7 +49,7 @@ class MMAnalysis(object):
                 GIWAXS_file = glob.glob(folder + '/GIWAXS' + "/*.dat")[0]
                 GIWAXS_data = pd.read_csv(GIWAXS_file, sep='\s+', header=0, names=np.array(
                     ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'intensity', 'frame_number', 'izero',
-                      'date', 'time']))
+                      'date', 'time','am/pm']))
         
                 self.qRaw, self.giwaxsTimeRaw, self.giwaxsIntensityRaw = self.convertGIWAXS_data(GIWAXS_data, self.sampleName, self.outputPath)
                 
@@ -225,7 +226,6 @@ class MMAnalysis(object):
             logDataTemp[:,0] = logDataTemp[:,0] - logDataTemp[0,0]
 
             self.logDataPost = pd.DataFrame(logDataTemp, columns = ['Time','Pyrometer','Spin_Motor', 'Dispense X', 'Gas Quenching'])
-            
         else:
                 
             #self.lineLog = mMA_plots.plotLog(sampleName, savePath, logData)
@@ -348,8 +348,8 @@ class MMAnalysis(object):
             if peakUpperTH[i] > energyPL[-1]:
                 peakUpperTH[i] = energyPL[-1]
                 
-        # show_every = int(len(timePL)/100)     # int n, shows every n'th frame with fit
-        show_every = int(1)     # int n, shows every n'th frame with fit
+        show_every = int(len(timePL)/100)     # int n, shows every n'th frame with fit
+        # show_every = int(1) 
 
         mMA_fits.plFitting(self.plParams, energyPL, timePL, intPL, show_every, numGauss, peakLowerTH, self.inputDict, peakUpperTH, estPeakWidth, minPeakWidth, maxPeakWidth, sampleName, savePath)
         
