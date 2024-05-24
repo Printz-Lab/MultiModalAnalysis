@@ -69,7 +69,7 @@ def convertGIWAXS_data(GIWAXS_data, sample_name, save_path):
         
         full_intensity.append(np.divide(data[:,0], data[:,1]))
         frame_times.append((new_time - begin_time).seconds)
-    
+        print(q_values, np.array(frame_times), np.array(full_intensity))
     
     return (q_values, np.array(frame_times), np.array(full_intensity))
 
