@@ -14,6 +14,7 @@ import tifffile
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from tqdm import tqdm
+import time
 
 def compute_average_intensity(image, roi):
     """
@@ -26,11 +27,14 @@ def compute_average_intensity(image, roi):
     Returns:
         float: The average intensity of pixels within the ROI.
     """
-    # Apply the ROI mask to the image
-    roi_pixels = image[roi]
+    # Sum the pixel values in the region of interest (this is much faster than indexing and using np.mean)
+    sum_intensity = np.sum(image * roi)
+    
+    # Count the number of pixels in the region of interest
+    count_pixels = np.sum(roi)
     
     # Compute the average intensity
-    average_intensity = np.mean(roi_pixels)
+    average_intensity = sum_intensity / count_pixels
     
     return average_intensity
 
@@ -59,13 +63,12 @@ def create_roi(image_shape, roi_coordinates):
 # =================Part 1: Loading and Generating Data======================
 # Loading data
 giwaxsFile = askopenfilenames()
-print(giwaxsFile)
+
 dataOld = pd.read_csv(giwaxsFile[0], sep='\s+', header=0, names=np.array(
     ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'intensity', 'frame_number', 'izero',
       'date', 'time', 'AMPM']))
 
 path = askdirectory()
-print(path)
 files = sorted(glob.glob(path + "\*.tif"))
 # Get number of files
 nFiles = len(files)
@@ -92,16 +95,23 @@ plt.show()
 
 linesPerImage = int(len(dataOld.qvalue) / nFiles)
 
+#read all tiff files at once
+imagestack = tifffile.imread(files)
+
 for i in tqdm(range(0, nFiles)):
-    curImage = tifffile.imread(files[i])
-    tempiZero = compute_average_intensity(curImage, roi_mask)
-    for ii in range(0,linesPerImage):
-        # Compute the average intensity within the ROI
-        iZero.append(tempiZero)
-    # Get correct timestamp
-    with Image.open(files[i]) as img:        
-        for iii in range(0,linesPerImage):
-            creationTimes.append(img.tag_v2[306].split(' ')[1].split("\x00")[0])
+    tempiZero = compute_average_intensity(imagestack[i,:,:], roi_mask)
+    tif = tifffile.TiffFile(files[i])
+    timestamp = tif.pages[0].tags['DateTime'].value
+
+    # Create np arrays with the same length as the number of lines per image, but skip the for loop used previously
+    tempiZero_array = np.full( linesPerImage, float(tempiZero))
+    timestamp_array = np.full( linesPerImage, timestamp) 
+    iZero.append(tempiZero_array)
+    creationTimes.append(timestamp_array)
+
+# Flatten the lists
+creationTimes = np.concatenate(creationTimes)
+iZero = np.concatenate(iZero)
 
 dataNew = dataOld.drop(['AMPM', 'time', 'izero'], axis=1)
 dataNew.insert(8, "time", creationTimes, True)
@@ -111,4 +121,4 @@ newCols = ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'inte
 dataNew = dataNew[newCols]
 
 
-dataNew.to_csv(path + "_output.dat", sep = '\t', index = False)
+dataNew.to_csv(giwaxsFile + "_outputimagestack2.dat", sep = '\t', index = False)
