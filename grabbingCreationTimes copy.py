@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from tqdm import tqdm
 import time
+import os
 
 def compute_average_intensity(image, roi):
     """
@@ -63,15 +64,17 @@ def create_roi(image_shape, roi_coordinates):
 # =================Part 1: Loading and Generating Data======================
 # Loading data
 giwaxsFile = askopenfilenames()
-
+print(giwaxsFile)
 dataOld = pd.read_csv(giwaxsFile[0], sep='\s+', header=0, names=np.array(
     ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'intensity', 'frame_number', 'izero',
       'date', 'time', 'AMPM']))
 
 path = askdirectory()
+print(path)
 files = sorted(glob.glob(path + "\*.tif"))
 # Get number of files
 nFiles = len(files)
+print(nFiles)
 creationTimes = []
 iZero = []
 
@@ -94,7 +97,7 @@ plt.colorbar(label='Intensity')
 plt.show()
 
 linesPerImage = int(len(dataOld.qvalue) / nFiles)
-
+print(linesPerImage)
 #read all tiff files at once
 imagestack = tifffile.imread(files)
 
@@ -121,4 +124,5 @@ newCols = ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'inte
 dataNew = dataNew[newCols]
 
 
-dataNew.to_csv(giwaxsFile + "_outputimagestack2.dat", sep = '\t', index = False)
+filepath = os.path.splitext(giwaxsFile[0])[0]
+dataNew.to_csv(filepath + "_output.dat", sep='\t', index=False)
