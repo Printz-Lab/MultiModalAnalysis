@@ -49,7 +49,7 @@ class MMAnalysis(object):
                 GIWAXS_file = glob.glob(folder + '/GIWAXS' + "/*.dat")[0]
                 GIWAXS_data = pd.read_csv(GIWAXS_file, sep='\s+', header=0, names=np.array(
                     ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'intensity', 'frame_number', 'izero',
-                      'date', 'time','am/pm']))
+                      'date', 'date_created','time']))
         
                 self.qRaw, self.giwaxsTimeRaw, self.giwaxsIntensityRaw = self.convertGIWAXS_data(GIWAXS_data, self.sampleName, self.outputPath)
                 
@@ -348,7 +348,7 @@ class MMAnalysis(object):
             if peakUpperTH[i] > energyPL[-1]:
                 peakUpperTH[i] = energyPL[-1]
                 
-        show_every = int(len(timePL)/100)     # int n, shows every n'th frame with fit
+        show_every = int(len(timePL)/20)     # int n, shows every n'th frame with fit
         # show_every = int(1) 
 
         mMA_fits.plFitting(self.plParams, energyPL, timePL, intPL, show_every, numGauss, peakLowerTH, self.inputDict, peakUpperTH, estPeakWidth, minPeakWidth, maxPeakWidth, sampleName, savePath)

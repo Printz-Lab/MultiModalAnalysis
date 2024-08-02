@@ -34,8 +34,7 @@ if testObj.genParams['Logging']:
             testObj.plotLog(True, True, testObj.sampleName, testObj.outputPath, testObj.logDataRaw)
         
             testObj.plotLog(False, True, testObj.sampleName, testObj.outputPath, testObj.logDataPost)
-            print(testObj.logDataPost)
-            print(type(testObj.logDataPost))
+
         #if input('Continue? (y/n) ') == 'y':
         if tk.messagebox.askquestion("test", "Continue?") == 'yes':
             continueMain = True

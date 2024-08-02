@@ -117,7 +117,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
     return (params, std_error, redchi, peak_in_frame)        
     
 def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, outputPath, hkl):
-
+    init_params = {}
     amplitude, unc_a = [], []
     center, unc_c = [], []
     sigma, unc_s = [], []

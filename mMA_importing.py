@@ -32,7 +32,7 @@ def convertGIWAXS_data(GIWAXS_data, sample_name, save_path):
     These are saved as csv files.
 
     '''
-    print(GIWAXS_data)
+
     numFrames = GIWAXS_data.image_num[len(GIWAXS_data)-1] + 1
 
     beginTime = GIWAXS_data.time[0]
@@ -69,7 +69,6 @@ def convertGIWAXS_data(GIWAXS_data, sample_name, save_path):
         
         full_intensity.append(np.divide(data[:,0], data[:,1]))
         frame_times.append((new_time - begin_time).seconds)
-        print(q_values, np.array(frame_times), np.array(full_intensity))
     
     return (q_values, np.array(frame_times), np.array(full_intensity))
 

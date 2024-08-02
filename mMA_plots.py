@@ -13,6 +13,7 @@ from bokeh.plotting import figure, output_file, save
 from bokeh.models import LinearColorMapper, ColorBar, NumericInput, LinearAxis, Range1d, HoverTool, CheckboxGroup, CustomJS
 from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.layouts import layout
+from matplotlib import ticker
 
 def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
 
@@ -37,7 +38,7 @@ def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
     ax = fig.add_axes([left, bottom, width, height])
 
     # add the contour plot and a colorbar
-    cp = plt.contourf(frame_time, q, intensity.T)
+    cp = plt.contourf(frame_time, q, intensity.T, locator=ticker.LogLocator())
     plt.colorbar(cp, location='left')
 
     # define axis names, ticks, etc.
@@ -149,10 +150,11 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
         # PL plot
         # removing negative points from data (important for log plot)
         intPL = np.where(intPL < 1, 1, intPL)
-        logIntPL = np.log(intPL)
-        i_max = logIntPL.max()
+        # logIntPL = np.log(intPL)
+        # i_max = logIntPL.max()
+        i_max = intPL.max()
         plt.setp(ax1.get_xticklabels(), fontsize=25)
-        cp1 = ax1.contourf(timePL, energyPL, logIntPL/i_max, np.linspace(0/i_max,1, 100),cmap='gist_heat')
+        cp1 = ax1.contourf(timePL, energyPL, intPL/i_max, np.linspace(0/i_max,1, 100))
         cbax1 = fig.add_axes([0.89, 0.66, 0.03, 0.3])
         cb1 = fig.colorbar(cp1, ax = ax1, cax = cbax1, ticks=np.linspace(0,1,2))
         cb1.set_label(' Norm. Intensity', fontsize = 12, labelpad=-3)
@@ -204,7 +206,8 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     i_max = intGIWAXS.max()
     i_min = intGIWAXS.min()
     
-    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T/i_max, np.linspace(i_min/i_max, 1, 100), cmap=plt.get_cmap('Greys'))
+    # cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T/i_max, np.linspace(i_min/i_max, 1, 100), cmap=plt.get_cmap('Greys'), locator=ticker.LogLocator())
+    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T, cmap=plt.get_cmap('Greys'), locator=ticker.LogLocator())
     cbax2 = fig.add_axes(giwaxsBarPos)
     cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2, ticks = np.linspace(i_min/i_max, 1, 2))
     cb2.set_label('Norm. Intensity', fontsize = 12, labelpad=-1)
