@@ -12,7 +12,9 @@ import pandas as pd
 import tkinter as tk
 
 
-testObj = mMA_class.MMAnalysis("Testsample")
+testObj = mMA_class.MMAnalysis("Testsample", 
+    # restart_file=r"c:\Users\raglo\OneDrive - University of Arizona\Printz Lab\Data\AminoAcids\Beamline\SeanPL\MAPI_1pct_ABA_S1_30_tube_5min 003294 Spectrums\output\MAPI_1pct_ABA_S1_30_tube_5min 003294 Spectrums.pkl"
+    )
 #%%
 if testObj.genParams['Logging']:
             
@@ -29,7 +31,7 @@ if testObj.genParams['Logging']:
         else:
             #Finding the start time automatically
             testObj.suggestedLogTimeIdx = next(x for x, val in enumerate(testObj.logDataRaw.Spin_Motor) if val > 0) 
-            #print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
+            print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
 
             testObj.plotLog(True, True, testObj.sampleName, testObj.outputPath, testObj.logDataRaw)
         

@@ -12,6 +12,56 @@ from scipy.signal import savgol_filter
 import copy
 from datetime import datetime, timedelta
 from tqdm import tqdm
+from PIL import Image
+from PIL.TiffTags import TAGS
+
+
+def extract_datetime_from_tif(tif_path):
+    with Image.open(tif_path) as img:
+        metadata = {TAGS.get(k, k): img.tag[k] for k in img.tag.keys()}
+        raw_datetime = metadata.get("DateTime")
+        if raw_datetime:
+            dt_str = raw_datetime[0].split('\x00')[0]
+            return datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+        else:
+            raise ValueError(f"No valid DateTime in: {tif_path}")
+
+def convertGIWAXS_data_pyFAI_timed(folder_path, sample_name, save_path):
+    """
+    Uses the first and last .tif files to infer time spacing for .dat frames.
+    """
+    dat_files = sorted(glob.glob(os.path.join(folder_path, "*.dat")))
+    tif_files = sorted(glob.glob(os.path.join(folder_path, "*.tif")))
+    
+    if not dat_files:
+        raise FileNotFoundError("No .dat files found.")
+    if len(tif_files) < 2:
+        raise FileNotFoundError("Need at least two .tif files for timing.")
+
+    # Parse DateTime from first and last .tif
+    t_start = extract_datetime_from_tif(tif_files[0])
+    t_end   = extract_datetime_from_tif(tif_files[-1])
+    total_duration = (t_end - t_start).total_seconds()
+    
+    num_frames = len(dat_files)
+    if num_frames < 2:
+        raise ValueError("Need at least two .dat files for timing to make sense.")
+    
+    # Evenly spaced times
+    frame_times = np.linspace(0, total_duration, num_frames)
+
+    # Read intensities
+    all_intensities = []
+    for i, f in enumerate(tqdm(dat_files, desc="Reading .dat files")):
+        df = pd.read_csv(f, sep='\s+', comment='#', header=None, names=['q', 'I'], encoding='latin1')
+
+        if i == 0:
+            q_vals = df['q'].to_numpy()
+        all_intensities.append(df['I'].to_numpy())
+
+    full_intensity = np.array(all_intensities)
+
+    return q_vals, frame_times, full_intensity
 
 def convertGIWAXS_data(GIWAXS_data, sample_name, save_path):
     '''
@@ -215,8 +265,9 @@ def getLogData(logParams, logFile):
         logDataSelect = logData[logSelection]
         
     else:
+        header = 0 # rows to skip
         if logParams['LabviewPL']:
-            names=np.array(['Time of Day', 'Time', 'Image Counts', 'Pyrometer', 'Dispense X', 'Dispense Z', 'Gas Quenching', 'Sine', 'Spin_Motor', 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Power', '2D Image', 'Spectrometer'])
+            names=np.array(['Time of Day', 'Time', 'Image Counts', 'Pyrometer','Spin_Motor', 'Dispense X', 'Dispense Z', 'Gas Quenching', 'Sine' , 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Power', '2D Image', 'Spectrometer'])
         else:
             names=np.array(['Time of Day', 'Time', 'Pyrometer', 'Dispense X', 'Dispense Z', 'Gas Quenching', 'Spin_Motor', 'BK Set Amps', 'BK Set Volts', 'BK Amps', 'BK Volts', 'BK Power', 'Sine'])
             
@@ -225,9 +276,14 @@ def getLogData(logParams, logFile):
                 if l.startswith('DATA'):
                     header = i+1
                     break
-                
-        logData = pd.read_csv(logFile, sep='\t', header = 0, names = names, skiprows = header)
-        logSelection = ['Time', 'Pyrometer', 'Spin_Motor', 'Dispense X']
-        logDataSelect = logData[logSelection]
+    logData = pd.read_csv(logFile, sep='\t',  header = header)
+    print("Column names of logData:", logData.columns.tolist())
+    print(logData.head())
+    logData = logData.rename(columns={
+        'Time (s)': 'Time',
+        'Spin Motor': 'Spin_Motor',
+    })
+    logSelection = ['Time', 'Pyrometer', 'Spin_Motor', 'Dispense X']
+    logDataSelect = logData[logSelection]
             
     return logDataSelect
