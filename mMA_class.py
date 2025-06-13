@@ -46,10 +46,11 @@ class MMAnalysis(object):
             if self.genParams['GIWAXS']:
                 
                 GIWAXS_folder = glob.glob(folder + '/GIWAXS')[0]
-                GIWAXS_data = mMA_importing.convertGIWAXS_data_pyFAI_timed(GIWAXS_folder, self.sampleName, self.outputPath)
+                # GIWAXS_data = mMA_importing.convertGIWAXS_data_pyFAI_timed(GIWAXS_folder, self.sampleName, self.outputPath)
                 # pd.read_csv(GIWAXS_file, sep='\s+', header=0, names=np.array(
                 #     ['image_num', 'twotheta', 'twotheta_cuka', 'dspacing', 'qvalue', 'intensity', 'frame_number', 'izero',
                 #       'date', 'time']))
+                GIWAXS_data = mMA_importing.load_GIWAXS_npz(GIWAXS_folder)
         
                 self.qRaw, self.giwaxsTimeRaw, self.giwaxsIntensityRaw = GIWAXS_data
                 

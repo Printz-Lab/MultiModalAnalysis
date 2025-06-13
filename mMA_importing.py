@@ -26,6 +26,18 @@ def extract_datetime_from_tif(tif_path):
         else:
             raise ValueError(f"No valid DateTime in: {tif_path}")
 
+def load_GIWAXS_npz(npz_file_folder):
+    """
+    Load previously saved GIWAXS q, time, intensity arrays from .npz.
+    """
+    # Find the first .npz file in the folder
+    npz_files = glob.glob(os.path.join(npz_file_folder, "*.npz"))
+    if not npz_files:
+        raise FileNotFoundError(f"No .npz files found in {npz_file_folder}")
+    npz_file_path = npz_files[0]
+    data = np.load(npz_file_path)
+    return data["q"], data["time"], data["intensity"]
+
 def convertGIWAXS_data_pyFAI_timed(folder_path, sample_name, save_path):
     """
     Uses the first and last .tif files to infer time spacing for .dat frames.
@@ -129,16 +141,25 @@ def getPLData(plParams, PL_files, folder, logTimes):
     
     if plParams['Labview']:
         
-        for i in range(0, len(PL_files)):
-            fileTemp = PL_files[i].split('/')
-            fileTemp2 = fileTemp[-1].split('\\')
-            fileTemp3 = fileTemp2[-1].split(' ')
-            fileNum = fileTemp3[-1].split('.')[0]
-            
-            if len(fileNum) == 3:
-                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + fileTemp3[2] + ' ' + '00' + fileTemp3[3]))
-            elif len(fileNum) == 4:
-                os.rename(PL_files[i], os.path.join(folder, fileTemp3[0] + ' ' + fileTemp3[1] + ' ' + fileTemp3[2] + ' ' + '0' + fileTemp3[3]))
+        for i in range(len(PL_files)):
+            fname = os.path.basename(PL_files[i])
+            parts = fname.split(' ')
+            if len(parts) < 3:
+                print(f"⚠️ Unexpected PL filename format: {fname}")
+                continue
+
+            # Strip extension and pad spectrum number
+            spectrum_num = parts[-1].split('.')[0].zfill(5)
+            new_name = ' '.join(parts[:-1] + [spectrum_num]) + '.txt'
+
+            old_path = PL_files[i]
+            new_path = os.path.join(folder, new_name)
+
+            try:
+                os.rename(old_path, new_path)
+            except Exception as e:
+                print(f"⚠️ Failed to rename {old_path} -> {new_path}: {e}")
+
         
     else:
     
@@ -181,6 +202,11 @@ def getPLData(plParams, PL_files, folder, logTimes):
         df_x = logTimes
         # reading all files
         df_all = np.concatenate([pd.read_csv(f, sep="\t", header=1) for f in tqdm(PL_files)], axis=1)
+        
+        if df_all.shape[1] != len(df_x) * 2:  # each spectrum contributes 2 columns: wavelength + intensity
+            print(f"[INFO] Resampling time axis: PL has {df_all.shape[1]//2} spectra, but log has {len(df_x)} timestamps.")
+            df_x = np.linspace(df_x[0], df_x[-1], df_all.shape[1] // 2)
+    
     else:
         # Reading timestamps and converting to time from first spectrum in seconds
         mTime = np.zeros((nFiles, 6))

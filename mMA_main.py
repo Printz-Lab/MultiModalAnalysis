@@ -85,7 +85,7 @@ if testObj.genParams['GIWAXS']:
             
             fitting = False
     
-    dfPatterns = testObj.plotIndividually('GIWAXS_', 'patterns', 'q ($\AA$)', '_Indv_GIWAXS-Patterns', testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost)
+    dfPatterns = testObj.plotIndividually('GIWAXS_', 'patterns', r'q ($\AA$)', '_Indv_GIWAXS-Patterns', testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost)
     if type(dfPatterns) is not str:
         dfPatterns[testObj.sampleName + '_q_Patterns'] = testObj.giwaxsQPost
         dfPatterns.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_GIWAXS-Patterns.csv'), index=None)

@@ -147,6 +147,7 @@ def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, 
                     # for higher efficiency, the init_params are now changed to the 
                     # fit values for next scan. However, if the initial frame is 
                     # wrongly identified to contain a peak, this might lead to problems
+                    init_params = {}
                     init_params['amplitude'] = params[0]
                     init_params['center'] = params[1]
                     init_params['sigma'] = params[2]

@@ -1,0 +1,14 @@
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Thu Apr 24 18:58:00 2025
+poni_version: 2.1
+Detector: Pilatus1M
+Detector_config: {"orientation": 3}
+Distance: 0.18803795231931478
+Poni1: 0.08975301452146654
+Poni2: 0.0531076707092556
+Rot1: -0.6345493190526326
+Rot2: 0.0052704199871120416
+Rot3: 4.3569697969951065e-13
+Wavelength: 1.2398419843320025e-10
+# Calibrant: ito_calibrant
+# Image: fabio:///C:/Users/raglo/OneDrive - University of Arizona/Documents/GitHub/Printz-Giwaxs-Pipeline/MAPI_1pct_ABA_S1_5min_tube_30SCFM_ITO.tif
