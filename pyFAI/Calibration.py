@@ -7,9 +7,10 @@ from pyFAI.geometry import Geometry
 from pyFAI.detectors import detector_factory
 from pyFAI.goniometer import SingleGeometry
 from pyFAI.gui import jupyter
+import matplotlib.pyplot as plt
 
 
-def giwaxsCalibration():
+def giwaxsCalibration(default_poni_file_path=r'pyFAI\ITO_test.poni', calibrant=r'pyFAI\ito_calibrant.D', energy='10'):
     
     root = tk.Tk()
     root.withdraw()  # Hide the root window
@@ -21,9 +22,10 @@ def giwaxsCalibration():
     if not calibrant_image_path:
         print("No calibrant image selected. Exiting.")
         return
-    default_poni_file_path = r'C:\Users\raglo\OneDrive - University of Arizona\Documents\GitHub\MultiModalAnalysis\pyFAI\ITO_test.poni'
-    calibrant = r'C:\Users\raglo\OneDrive - University of Arizona\Documents\GitHub\MultiModalAnalysis\pyFAI\ito_calibrant.D'
-    energy = 10
+    # default_poni_file_path = r'pyFAI\ITO_test.poni'
+    # default_poni_file_path = r'pyFAI\MAPI_1pct_AVAI_S1_18_5min_refined.poni'
+    # calibrant = r'pyFAI\ito_calibrant.D'
+    # energy = '10'
     
     calibCommand = [
     'pyFAI-calib2',
@@ -69,6 +71,7 @@ def refine_calibration(sampleName, image_path, initial_poni, calibrant_file, ref
     
     # Verify refinement
     ax = jupyter.display(sg=sg)
+    # plt.show()
 
     # Save refined .poni file
     sg.geometry_refinement.save(refined_poni)
@@ -78,3 +81,4 @@ def refine_calibration(sampleName, image_path, initial_poni, calibrant_file, ref
 if __name__ == "__main__":
     # Example usage
     giwaxsCalibration()
+    

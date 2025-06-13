@@ -1,0 +1,14 @@
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Fri Jun 13 07:11:24 2025
+poni_version: 2.1
+Detector: Pilatus1M
+Detector_config: {"orientation": 3}
+Distance: 0.18797626359889757
+Poni1: 0.08739077889861123
+Poni2: 0.048598450670220186
+Rot1: -0.6572074555228334
+Rot2: 0.016071744098335918
+Rot3: 4.3569697969951065e-13
+Wavelength: 1.2398419843320025e-10
+# Calibrant: ito_calibrant
+# Image: K:/printz_Apr2024/MAPI_YL/MAPI_1pct_AVAI_S1_30min_18SCFM_ITO.tif

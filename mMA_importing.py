@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from PIL import Image
 from PIL.TiffTags import TAGS
+import matplotlib.pyplot as plt
 
 
 def extract_datetime_from_tif(tif_path):
@@ -36,7 +37,8 @@ def load_GIWAXS_npz(npz_file_folder):
         raise FileNotFoundError(f"No .npz files found in {npz_file_folder}")
     npz_file_path = npz_files[0]
     data = np.load(npz_file_path)
-    return data["q"], data["time"], data["intensity"]
+
+    return np.array(data["q"]), np.array(data["time"]), np.array(data["intensity"])
 
 def convertGIWAXS_data_pyFAI_timed(folder_path, sample_name, save_path):
     """
@@ -65,7 +67,7 @@ def convertGIWAXS_data_pyFAI_timed(folder_path, sample_name, save_path):
     # Read intensities
     all_intensities = []
     for i, f in enumerate(tqdm(dat_files, desc="Reading .dat files")):
-        df = pd.read_csv(f, sep='\s+', comment='#', header=None, names=['q', 'I'], encoding='latin1')
+        df = pd.read_csv(f, sep=r'\s+', comment='#', header=None, names=['q', 'I'], encoding='latin1')
 
         if i == 0:
             q_vals = df['q'].to_numpy()
