@@ -60,14 +60,11 @@ def match_peaks_to_hkl(q_peaks, hkl_peaks, tolerance=0.05):
 
 # Function to process a single frame
 
-def process_frame(frame_idx, q, time, I, hkl_peaks, window, npz_file, save_plot_interval=20, save_hkl_vlines_interval=20):
+def process_frame(frame_idx, q, time, I, matched_peaks, window, npz_file, save_plot_interval=20, save_hkl_vlines_interval=20):
     frame_results = {}
-    peak_indices, _ = find_peaks(I, height=np.max(I)*0.05, distance=5)
-    q_peaks = q[peak_indices]
-    matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
     
     # Plot full 1D profile with HKL vlines every N frames
-    if frame_idx % save_hkl_vlines_interval == 0:
+    if (frame_idx % save_hkl_vlines_interval == 0) or (60 < frame_idx < 80):
         vline_subfolder = os.path.splitext(npz_file)[0] + '_VlinePlots'
         os.makedirs(vline_subfolder, exist_ok=True)
         plt.figure(figsize=(8,5))
@@ -96,8 +93,10 @@ def process_frame(frame_idx, q, time, I, hkl_peaks, window, npz_file, save_plot_
         fraction_guess = 0.5
         background_guess = np.min(I_fit)
         p0 = [amplitude_guess, center_guess, sigma_guess, fraction_guess, background_guess]
+        lower_bounds = [0, q_target - window, 0, 0, 0]  # amplitude, center, sigma, fraction, background
+        upper_bounds = [np.inf, q_target + window, np.inf, 1, np.inf]
         try:
-            popt, pcov = curve_fit(pseudo_voigt, q_fit, I_fit, p0=p0, maxfev=10000)
+            popt, pcov = curve_fit(pseudo_voigt, q_fit, I_fit,bounds = (lower_bounds, upper_bounds), p0=p0, maxfev=10000)
             fwhm = fwhm_pseudo_voigt(popt[2], popt[3])
             k_shape = 0.9
             scherrer_size = k_shape * 2 * np.pi / fwhm / 10  # in nm
@@ -110,6 +109,7 @@ def process_frame(frame_idx, q, time, I, hkl_peaks, window, npz_file, save_plot_
             
             result = {
                 'Frame': frame_idx,
+                'Amplitude': popt[0],
                 'Time (s)': time[frame_idx],
                 'Center q (A^-1)': popt[1],
                 'Sigma': popt[2],
@@ -126,13 +126,14 @@ def process_frame(frame_idx, q, time, I, hkl_peaks, window, npz_file, save_plot_
             frame_results[hkl_str].append(result)
             
             # Save fit plot every Nth frame
-            if frame_idx % save_plot_interval == 0:
+            if frame_idx % save_plot_interval == 0 or (60 < frame_idx < 80):
                 fit_subfolder = os.path.splitext(npz_file)[0] + '_FitPlots'
+                fit_subfolder = os.path.join(fit_subfolder, f'_({h}{k}{l})')
                 os.makedirs(fit_subfolder, exist_ok=True)
                 plt.figure(figsize=(6,4))
                 plt.plot(q_fit, I_fit, 'bo', label='Data')
                 plt.plot(q_fit, pseudo_voigt(q_fit, *popt), 'r-', label='Fit')
-                plt.title(f'Frame {frame_idx} HKL ({h}{k}{l})')
+                plt.title(f'({h}{k}{l}) at {time[frame_idx]:.2f} s')
                 plt.xlabel('q (A$^{-1}$)')
                 plt.ylabel('Intensity (a.u.)')
                 plt.legend()
@@ -154,7 +155,8 @@ if __name__ == "__main__":
     choice = messagebox.askyesno("Lattice Parameter", "Read lattice parameter from CIF file?")
 
     if choice:
-        cif_file = filedialog.askopenfilename(title="Select CIF file", filetypes=[("CIF files", "*.cif")])
+        # cif_file = filedialog.askopenfilename(title="Select CIF file", filetypes=[("CIF files", "*.cif")])
+        cif_file = r'materials_project\CH3NH3PbI3_cubic.cif'
         a_lattice = get_lattice_from_cif(cif_file)
         messagebox.showinfo("Lattice Parameter", f"Read a = {a_lattice:.4f} Å from CIF.")
     else:
@@ -165,12 +167,20 @@ if __name__ == "__main__":
     time = data['time']
     intensity = data['intensity']
 
-    window = 0.03  # fixed fitting window
+    window = 0.1  # fixed fitting window
     hkl_peaks = generate_cubic_hkl_q(a_lattice)
+
+    # Perform peak finding only once on middle frame
+    middle_idx = len(time) // 2
+    I_middle = intensity[middle_idx, :]
+    peak_indices, _ = find_peaks(I_middle, height=np.max(I_middle)*0.05, distance=5)
+    q_peaks = q[peak_indices]
+    matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
+
     all_results = {}
 
     with ProcessPoolExecutor() as executor:
-        futures = {executor.submit(process_frame, frame_idx, q, time, intensity[frame_idx, :], hkl_peaks, window, npz_file, 20, 20): frame_idx for frame_idx in range(intensity.shape[0])}
+        futures = {executor.submit(process_frame, frame_idx, q, time, intensity[frame_idx, :], matched_peaks, window, npz_file, 20, 20): frame_idx for frame_idx in range(intensity.shape[0])}
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing frames"):
             frame_results = future.result()
             for hkl_str, results in frame_results.items():
