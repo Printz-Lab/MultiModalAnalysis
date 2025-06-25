@@ -20,8 +20,8 @@ xls = pd.ExcelFile(file_path)
 sheets = xls.sheet_names
 
 # User-defined HKLs to plot (must match sheet names exactly)
-# hkls_to_plot = ['(100)', '(110)', '(111)', '(200)', '(210)']
-hkls_to_plot = ['(011)']
+hkls_to_plot = ['(001)', '(011)','(002)']
+# hkls_to_plot = ['(011)']
 
 colors = plt.cm.tab10.colors
 
