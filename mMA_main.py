@@ -10,10 +10,23 @@ import numpy as np
 import os
 import pandas as pd
 import tkinter as tk
+from tkinter import filedialog, simpledialog, messagebox
 
+#ask to select restart_file
+
+root = tk.Tk()
+root.withdraw()  # Hide the root window
+restart_file = filedialog.askopenfilename(
+    title="Select restart file",
+    filetypes=[("Pickle files", "*.pkl")],
+    initialdir=os.path.expanduser("~")  # Start in the user's home directory
+)
+if not restart_file:
+    restart_file = None  # If no file is selected, set to None
+    
 
 testObj = mMA_class.MMAnalysis("Testsample", 
-    # restart_file=r"c:\Users\raglo\OneDrive - University of Arizona\Printz Lab\Data\AminoAcids\Beamline\SeanPL\MAPI_1pct_ABA_S1_30_tube_5min 003294 Spectrums\output\MAPI_1pct_ABA_S1_30_tube_5min 003294 Spectrums.pkl"
+    restart_file=restart_file
     )
 #%%
 if testObj.genParams['Logging']:
