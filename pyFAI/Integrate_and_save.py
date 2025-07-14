@@ -102,22 +102,26 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
     np.savez_compressed(npz_filename, q=q_vals, time=frame_times, intensity=intensities)
     print(f"Saved integrated GIWAXS data to {npz_filename}")
 
-    plt.figure(figsize=(10, 6))
-    extent = [frame_times[0], frame_times[-1], q_vals[0], q_vals[-1]]
-    plt.imshow(
-        intensities.T,
-        aspect='auto',
-        extent=extent,
-        origin='lower',
-        cmap='viridis'
-    )
-    plt.colorbar(label='Intensity (a.u.)')
-    plt.ylabel('q (Å$^{-1}$)')
-    plt.xlabel('Time (s)')
-    plt.title(f'{sample_name} GIWAXS Heatmap')
-    plt.tight_layout()
+    fig = plt.figure(figsize=(7, 5))
+    left, bottom, width, height = 0.1, 0.1, 0.8, 0.8
+    ax = fig.add_axes((left, bottom, width, height))
+
+    # add the contour plot and a colorbar
+    cp = plt.contourf(frame_times, q_vals, intensities.T)
+    plt.colorbar(cp, location='left')
+
+    # define axis names, ticks, etc.
+    q_min, q_max = (0.6, 4)
+    y_ticks = np.linspace(q_min, q_max, 10)  # number of tickmarks
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel(r'Q $(\AA^{-1})$')
+    ax.set_yticks(y_ticks)
+    ax.yaxis.tick_right()
+    ax.yaxis.set_label_position("right")
+    ax.set_ylim(q_min, q_max)
+    ax.set_title(sample_name)
+    plt.savefig(os.path.join(save_path, str(sample_name) + '_GIWAXS_Plot'), dpi=300, bbox_inches="tight")
     plt.show()
-    plt.savefig(os.path.join(save_path, f"{sample_name}_GIWAXS_heatmap.png"))
 
 def plot_Chi_2theta(image_file, poni_file):
     """ Plot the 2D image in Chi-2theta space using pyFAI.

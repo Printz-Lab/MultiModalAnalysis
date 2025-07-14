@@ -18,7 +18,7 @@ def giwaxsCalibration(default_poni_file_path=r'pyFAI\ITO_test.poni', calibrant=r
     
     # Path to the default calibration file
     
-    calibrant_image_path = tk.filedialog.askopenfilename(title="Select the calibrant image")
+    calibrant_image_path = filedialog.askopenfilename(title="Select the calibrant image")
     if not calibrant_image_path:
         print("No calibrant image selected. Exiting.")
         return

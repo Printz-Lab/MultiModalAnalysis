@@ -31,7 +31,7 @@ def get_lattice_from_cif(cif_path):
     return lattice.a
 
 # Generate cubic HKLs
-def generate_cubic_hkl_q(a, max_hkl=4):
+def generate_cubic_hkl_q(a, max_hkl=3):
     hkl_list = []
     for h in range(0, max_hkl+1):
         for k in range(0, max_hkl+1):

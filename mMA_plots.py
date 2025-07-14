@@ -34,7 +34,7 @@ def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
     # create an empty figure with the following dimensions
     fig = plt.figure(figsize=(7, 5))
     left, bottom, width, height = 0.1, 0.1, 0.8, 0.8
-    ax = fig.add_axes([left, bottom, width, height])
+    ax = fig.add_axes((left, bottom, width, height))
 
     # add the contour plot and a colorbar
     cp = plt.contourf(frame_time, q, intensity.T)
