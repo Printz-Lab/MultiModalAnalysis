@@ -70,7 +70,7 @@ def integrate_giwaxs(folder_path, poni_path, method = ("bbox", "csr", "cython"))
     poni = PoniFile(data=poni_path)
     pixel_to_um = 172.0
     full_length = 981 * pixel_to_um / 1_000_000
-
+    print(poni.dist)
     ai = AzimuthalIntegrator(
         dist=poni.dist,
         poni1=poni.poni1,
@@ -89,7 +89,7 @@ def integrate_giwaxs(folder_path, poni_path, method = ("bbox", "csr", "cython"))
         img = fabio.open(tif_file)
         img_array = img.data
         mask = img_array > 4e9
-        res = ai.integrate1d_ng(img_array, 1000, mask=mask, unit="q_A^-1")
+        res = ai.integrate1d_ng(img_array, 1000, mask=mask, unit="q_A^-1", method=method)
         if i == 0:
             q_vals = res.radial
         all_intensities.append(res.intensity)
@@ -107,11 +107,17 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
     ax = fig.add_axes((left, bottom, width, height))
 
     # add the contour plot and a colorbar
-    cp = plt.contourf(frame_times, q_vals, intensities.T)
+    cp = plt.contourf(frame_times, q_vals, intensities.T, levels=100, cmap='viridis')
     plt.colorbar(cp, location='left')
+#     pcm = ax.pcolormesh(
+#     frame_times, q_vals,
+#     intensities.T,
+#     shading="auto"
+# )
+#     fig.colorbar(pcm, ax=ax, label="Intensity", location='left')
 
     # define axis names, ticks, etc.
-    q_min, q_max = (0.6, 4)
+    q_min, q_max = (0.8, 4)
     y_ticks = np.linspace(q_min, q_max, 10)  # number of tickmarks
     ax.set_xlabel('Time (s)')
     ax.set_ylabel(r'Q $(\AA^{-1})$')
@@ -119,7 +125,8 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position("right")
     ax.set_ylim(q_min, q_max)
-    ax.set_title(sample_name)
+    # ax.set_title(sample_name)
+    plt.tight_layout()
     plt.savefig(os.path.join(save_path, str(sample_name) + '_GIWAXS_Plot'), dpi=300, bbox_inches="tight")
     plt.show()
 

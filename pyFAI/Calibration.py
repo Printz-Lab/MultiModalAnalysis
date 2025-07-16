@@ -22,6 +22,7 @@ def giwaxsCalibration(default_poni_file_path=r'pyFAI\ITO_test.poni', calibrant=r
     if not calibrant_image_path:
         print("No calibrant image selected. Exiting.")
         return
+    print(f"Selected calibrant image: {calibrant_image_path}")
     # default_poni_file_path = r'pyFAI\ITO_test.poni'
     # default_poni_file_path = r'pyFAI\MAPI_1pct_AVAI_S1_18_5min_refined.poni'
     # calibrant = r'pyFAI\ito_calibrant.D'

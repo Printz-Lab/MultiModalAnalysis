@@ -9,6 +9,17 @@ from tkinter import filedialog, simpledialog, messagebox
 from tqdm import tqdm
 from lmfit.models import PseudoVoigtModel, LinearModel
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import warnings
+
+# Suppress UFloat zero-uncertainty warnings and disable covariance calculation in fits
+def _suppress_uncertainty_warnings():
+    warnings.filterwarnings(
+        "ignore",
+        "Using UFloat objects with std_dev==0 may give unexpected results.",
+        category=UserWarning
+    )
+
+_suppress_uncertainty_warnings()
 
 # FWHM calculation
 def fwhm_pseudo_voigt(sigma, fraction):
@@ -66,7 +77,7 @@ def fit_peak(q_fit, I_fit, q_target, prev_params=None):
     )
 
     params['peak_amplitude'].set(min=0)
-    params['peak_center'].set(min=q_target - 0.02, max=q_target + 0.02)
+    params['peak_center'].set(min=q_target - 0.04, max=q_target + 0.04)
     params['peak_sigma'].set(min=0.0005, max=0.05)
     params['peak_fraction'].set(min=0, max=1)
 
@@ -89,10 +100,10 @@ def fit_peak(q_fit, I_fit, q_target, prev_params=None):
 
     return result
 
-def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params):
+def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_dir, plot_every_n=20):
     frame_results = {}
     for (h, k, l, q_target) in matched_peaks:
-        mask = (q >= q_target - 0.03) & (q <= q_target + 0.03)
+        mask = (q >= q_target - 0.08) & (q <= q_target + 0.08)
         if np.sum(mask) < 5:
             continue
         q_fit = q[mask]
@@ -124,11 +135,49 @@ def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params):
                 'Scherrer Size (nm)': scherrer_size,
                 'R_squared': r_squared,
                 'RedChi': fit_result.redchi,
-                'AIC': fit_result.aic,
-                'BIC': fit_result.bic,
+                # 'AIC': fit_result.aic,
+                # 'BIC': fit_result.bic,
                 'HKL': hkl_str
             }
             frame_results[hkl_str] = result
+
+            # Plot every Nth frame
+            if frame_idx % plot_every_n == 0:
+                fit_subfolder = os.path.join(output_dir, f'{hkl_str}')
+                plt.figure(figsize=(6, 4))
+                plt.plot(q_fit, I_fit, 'k.', label='Data')
+                plt.plot(q_fit, fit_result.best_fit, 'r-', label='Fit')
+                plt.axvline(popt['peak_center'], color='blue', linestyle='--', label='Peak Center')
+                plt.axvline(popt['peak_center'] - fwhm/2, color='green', linestyle='--', label='FWHM Left')
+                plt.axvline(popt['peak_center'] + fwhm/2, color='green', linestyle='--', label='FWHM Right')
+                plt.title(f'Frame {frame_idx} - {hkl_str}')
+                plt.xlabel('q (A$^{-1}$)')
+                plt.ylabel('Intensity')
+                plt.legend()
+                plt.tight_layout()
+                os.makedirs(fit_subfolder, exist_ok=True)
+                plt.savefig(os.path.join(fit_subfolder, f'fit_{hkl_str}_frame{frame_idx}.png'))
+                # print(f"Saved fit plot for frame {frame_idx} to {fit_subfolder}")
+                plt.close()
+            # Plot full 1D profile with HKL vlines every N frames
+            if (frame_idx % plot_every_n) == 0 or (60 < frame_idx < 80):
+                vline_subfolder = os.path.join(output_dir, f'VlinePlots')
+                os.makedirs(vline_subfolder, exist_ok=True)
+                plt.figure(figsize=(8,5))
+                plt.plot(q, I, label=f'Frame {frame_idx}')
+                for (h, k, l, q_target) in matched_peaks:
+                    plt.axvline(q_target, color='r', linestyle='--', alpha=0.5)
+                    plt.text(q_target, np.max(I)*0.9, f'({h}{k}{l})', rotation=90, fontsize=8, ha='center')
+                plt.xlabel('q (A$^{-1}$)')
+                plt.xlim(.5, max(q))
+                plt.ylabel('Intensity (a.u.)')
+                plt.title(f'1D Pattern with HKLs Frame {frame_idx}')
+                plt.legend()
+                plt.grid()
+                vline_plot_file = os.path.join(vline_subfolder, f'Frame{frame_idx}_HKL_Vlines.png')
+                plt.savefig(vline_plot_file)
+                plt.close()
+
         except Exception:
             continue
     return frame_idx, frame_results
@@ -142,7 +191,7 @@ if __name__ == "__main__":
     choice = messagebox.askyesno("Lattice Parameter", "Read lattice parameter from CIF file?")
     if choice:
         # cif_file = filedialog.askopenfilename(title="Select CIF file", filetypes=[("CIF files", "*.cif")])
-        cif_file = r'materials_project\CH3NH3PbI3_cubic.cif'
+        cif_file = r'Scherrer_analysis\CH3NH3PbI3_cubic.cif'
         a_lattice = get_lattice_from_cif(cif_file)
         messagebox.showinfo("Lattice Parameter", f"Read a = {a_lattice:.4f} Å from CIF.")
     else:
@@ -156,15 +205,16 @@ if __name__ == "__main__":
     hkl_peaks = generate_cubic_hkl_q(a_lattice)
     middle_idx = len(time) // 2
     I_middle = intensity[middle_idx, :]
-    peak_indices, _ = find_peaks(I_middle, height=np.max(I_middle)*0.05, distance=5)
+    peak_indices, _ = find_peaks(I_middle, height=np.max(I_middle)*0.1, distance=5)
     q_peaks = q[peak_indices]
     matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
 
     all_results = {}
     prev_fit_params = {}
+    output_dir = os.path.splitext(npz_file)[0] + '_fit_plots'
 
     with ProcessPoolExecutor() as executor:
-        futures = [executor.submit(process_frame, i, q, time, intensity[i, :], matched_peaks, prev_fit_params) for i in range(intensity.shape[0])]
+        futures = [executor.submit(process_frame, i, q, time, intensity[i, :], matched_peaks, prev_fit_params, output_dir) for i in range(intensity.shape[0])]
         for future in tqdm(as_completed(futures), total=len(futures), desc="Processing frames"):
             frame_idx, frame_results = future.result()
             for hkl_str, result in frame_results.items():
