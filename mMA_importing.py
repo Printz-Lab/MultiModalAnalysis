@@ -302,11 +302,14 @@ def getLogData(logParams, logFile):
         with open(logFile) as f:
             for i, l in enumerate(f):
                 if l.startswith('DATA'):
+                    print(f'[INFO] Found data header at line {i}')
                     header = i+1
                     break
     logData = pd.read_csv(logFile, sep='\t',  header = header)
-    print("Column names of logData:", logData.columns.tolist())
-    print(logData.head())
+    # print("Column names of logData:", logData.columns.tolist())
+    from pprint import pprint
+    pprint(logData.head())
+    print("log data has " + str(len(logData)) + " rows and " + str(len(logData.columns)) + " columns.")
     logData = logData.rename(columns={
         'Time (s)': 'Time',
         'Spin Motor': 'Spin_Motor',

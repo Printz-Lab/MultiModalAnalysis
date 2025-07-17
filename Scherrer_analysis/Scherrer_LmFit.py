@@ -142,23 +142,23 @@ def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_
             frame_results[hkl_str] = result
 
             # Plot every Nth frame
-            if frame_idx % plot_every_n == 0:
-                fit_subfolder = os.path.join(output_dir, f'{hkl_str}')
-                plt.figure(figsize=(6, 4))
-                plt.plot(q_fit, I_fit, 'k.', label='Data')
-                plt.plot(q_fit, fit_result.best_fit, 'r-', label='Fit')
-                plt.axvline(popt['peak_center'], color='blue', linestyle='--', label='Peak Center')
-                plt.axvline(popt['peak_center'] - fwhm/2, color='green', linestyle='--', label='FWHM Left')
-                plt.axvline(popt['peak_center'] + fwhm/2, color='green', linestyle='--', label='FWHM Right')
-                plt.title(f'Frame {frame_idx} - {hkl_str}')
-                plt.xlabel('q (A$^{-1}$)')
-                plt.ylabel('Intensity')
-                plt.legend()
-                plt.tight_layout()
-                os.makedirs(fit_subfolder, exist_ok=True)
-                plt.savefig(os.path.join(fit_subfolder, f'fit_{hkl_str}_frame{frame_idx}.png'))
-                # print(f"Saved fit plot for frame {frame_idx} to {fit_subfolder}")
-                plt.close()
+            # if frame_idx % plot_every_n == 0:
+            #     fit_subfolder = os.path.join(output_dir, f'{hkl_str}')
+            #     plt.figure(figsize=(6, 4))
+            #     plt.plot(q_fit, I_fit, 'k.', label='Data')
+            #     plt.plot(q_fit, fit_result.best_fit, 'r-', label='Fit')
+            #     plt.axvline(popt['peak_center'], color='blue', linestyle='--', label='Peak Center')
+            #     plt.axvline(popt['peak_center'] - fwhm/2, color='green', linestyle='--', label='FWHM Left')
+            #     plt.axvline(popt['peak_center'] + fwhm/2, color='green', linestyle='--', label='FWHM Right')
+            #     plt.title(f'Frame {frame_idx} - {hkl_str}')
+            #     plt.xlabel('q (A$^{-1}$)')
+            #     plt.ylabel('Intensity')
+            #     plt.legend()
+            #     plt.tight_layout()
+            #     os.makedirs(fit_subfolder, exist_ok=True)
+            #     plt.savefig(os.path.join(fit_subfolder, f'fit_{hkl_str}_frame{frame_idx}.png'))
+            #     # print(f"Saved fit plot for frame {frame_idx} to {fit_subfolder}")
+            #     plt.close()
             # Plot full 1D profile with HKL vlines every N frames
             if (frame_idx % plot_every_n) == 0 or (60 < frame_idx < 80):
                 vline_subfolder = os.path.join(output_dir, f'VlinePlots')

@@ -7,11 +7,37 @@ from tkinter import filedialog
 from scipy.signal import savgol_filter
 # Import plot_data from template_plottin
 from template_plotting import plot_data
+def fwhm_correction_instrumental_broadening(
+    measured_fwhm: np.ndarray
+) -> np.ndarray:
+    """
+    Corrects the measured FWHM in q-space by removing the instrumental broadening.
+    """
+    wavelength = 1.2398
+    instrument_fwhm_rad = np.deg2rad(0.1)  # Example instrumental FWHM in radians
+    instrument_dq = (2 * np.pi / wavelength) * instrument_fwhm_rad
+    corrected_fwhm = np.sqrt(np.clip(measured_fwhm**2 - instrument_dq**2, 0, None))
+    plt.figure(figsize=(8, 6))
+    plt.plot(measured_fwhm, label='Measured FWHM')
+    plt.plot(corrected_fwhm, label='Corrected FWHM', linestyle='--')
+    plt.ylabel('FWHM (A^-1)')
+    plt.show()
+    return corrected_fwhm
 
+def calculate_scherrer_size(
+    fwhm: np.ndarray, wavelength: float = 1.2398, k: float = 0.9
+) -> np.ndarray:
+    """
+    Calculates the Scherrer size from the FWHM in q-space.
+    """
+    if np.any(fwhm <= 0):
+        raise ValueError("FWHM values must be positive for Scherrer size calculation.")
+    scherrer_size = k * 2 * np.pi / fwhm / 10 / (4 * np.pi / 3)**(1/3)
+    return scherrer_size
 
 # Define a default set of markers and colors
 tpl_markers = ["o", "s", "^", "d", "x"]
-tpl_palette = ["#080808", "#0262F3", "#0A9628", "#863AB9", "#56CCF2"]
+tpl_palette = ["#080808", "#1c73dd", "#3aa56d", "#872ec4", "#56CCF2"]
 
 def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str = None):
     """
@@ -36,9 +62,11 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         df_filt = df[df["R_squared"] >= 0.93]
         if df_filt.empty:
             continue
-
+        fwhm = df_filt["FWHM (A^-1)"].to_numpy()
+        fwhm = fwhm_correction_instrumental_broadening(fwhm)
+        size = calculate_scherrer_size(fwhm)
         time = df_filt["Time (s)"].to_numpy()
-        size = df_filt["Scherrer Size (nm)"].to_numpy()
+        # size = df_filt["Scherrer Size (nm)"].to_numpy()
         if len(size) >= 9:
             size = savgol_filter(size, window_length=9, polyorder=3)
 
@@ -87,7 +115,7 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         yticks=y_ticks,
         ymticks=y_mticks,
         xlabel="Time (s)",
-        ylabel="Scherrer Size (nm)",
+        ylabel="Radius (nm)",
         ax=ax_o,
     )
     plt.tight_layout()

@@ -44,6 +44,65 @@ mpl.rcParams.update(
     }
 )
 
+def fwhm_correction_instrumental_broadening(
+    measured_fwhm: np.ndarray
+) -> np.ndarray:
+    """
+    Corrects the measured FWHM in q-space by removing the instrumental broadening.
+    """
+    wavelength = 1.2398
+    instrument_fwhm_rad = np.deg2rad(0.1)  # Example instrumental FWHM in radians
+    instrument_dq = (2 * np.pi / wavelength) * instrument_fwhm_rad
+    corrected_fwhm = np.sqrt(np.clip(measured_fwhm**2 - instrument_dq**2, 0.000001, None))
+    # plt.figure(figsize=(8, 6))
+    # plt.plot(measured_fwhm, label='Measured FWHM')
+    # plt.plot(corrected_fwhm, label='Corrected FWHM', linestyle='--')
+    # plt.ylabel('FWHM (A^-1)')
+    # plt.show()
+    return corrected_fwhm
+
+def calculate_scherrer_size(
+    fwhm: np.ndarray, wavelength: float = 1.2398, k: float = 0.9
+) -> np.ndarray:
+    """
+    Calculates the Scherrer size from the FWHM in q-space.
+    """
+    if np.any(fwhm <= 0):
+        raise ValueError("FWHM values must be positive for Scherrer size calculation.")
+    scherrer_size = k * 2 * np.pi / fwhm / 10 / 2 #(4 * np.pi / 3)**(1/3)
+    return scherrer_size
+def savgol_with_clipping(y, window_length=9, polyorder=3, n_sigma=3):
+    """
+    Apply a Savitzky–Golay filter but clip any points that deviate 
+    more than n_sigma * std(residual) back to the smoothed curve.
+    
+    Parameters
+    ----------
+    y : 1D array
+    window_length : int, odd
+    polyorder : int < window_length
+    n_sigma : float
+      How many residual‐sigmas to tolerate before clipping.
+    
+    Returns
+    -------
+    y_clean : 1D array
+    """
+    # 1) smooth
+    y_smooth = savgol_filter(y, window_length, polyorder)
+    # 2) residuals & sigma
+    subset_y = y[100:200]
+    y_smooth_subset = y_smooth[100:200]
+    resid = y - y_smooth
+    resid_subset = subset_y - y_smooth_subset
+    sigma = np.std(resid_subset)
+    # sigma = np.std(resid)
+    # 3) find spikes
+    spike_mask = np.abs(resid) > (n_sigma * sigma)
+    # 4) clip: only those points get replaced
+    y_clean = y_smooth.copy()
+    y_clean[spike_mask] = np.nan
+    return y_clean
 
 def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshold=0.93):
     """
@@ -69,12 +128,15 @@ def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshol
         df = df[df["R_squared"] >= r2_threshold]
         if df.empty:
             continue
+        fwhm = df["FWHM (A^-1)"].to_numpy()
+        fwhm = fwhm_correction_instrumental_broadening(fwhm)
+        size = calculate_scherrer_size(fwhm)
         time = df["Time (s)"].values
-        size = df["Scherrer Size (nm)"].values
+        # size = df["Scherrer Size (nm)"].values
         # smooth if enough points
         if len(size) >= 9:
-            size = savgol_filter(size, window_length=9, polyorder=3)
-        series = pd.Series(data=size, index=time)
+            size = savgol_with_clipping(size, window_length=9, polyorder=3, n_sigma=3)
+        series = pd.Series(data=size, index=time).dropna()
         series_list.append(series)
     if not series_list:
         return None
@@ -109,17 +171,17 @@ def main():
     #     return
     # print(file_paths)
     file_paths = [
-        "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/MAPI_Control_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
-        "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/MAPI_1pct_AVA_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
+        "MAPI_Control_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
+        "MAPI_1pct_AVA_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
         # "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
-        "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/MAPI_1pct_AVAI_S1_18_5min_GIWAXS_raw_FittingResults.xlsx",
-        "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/AVACL_GIWAXS_raw_FittingResults.xlsx",
+        "MAPI_1pct_AVAI_S1_18_5min_GIWAXS_raw_FittingResults.xlsx",
+        "AVACL_GIWAXS_raw_FittingResults.xlsx",
     ]
     # Compute averages for each file
     results = {}
     for path in file_paths:
         base = os.path.splitext(os.path.basename(path))[0]
-        sheets_to_include = ["(001)", "(011)", "(003)", "(002)", "(022)", "(111)"]
+        sheets_to_include = ["(001)", "(011)", "(111)"]
         avg_series = compute_average_scherrer(
             path, sheets_to_include=sheets_to_include, r2_threshold=0.95
         )
@@ -137,6 +199,8 @@ def main():
     colors = ["#080808", "#0262F3", "#863AB9", "#0A9628", "#56CCF2"]
     markers = ["s", "o", "^", "v"]
     labels = ("Pristine $MAPbI_3$", r"$1\%$ 5-AVA", r"$1\%$ 5-AVAI", r"$1\%$ 5-AVACl")
+    ymax = 25
+    
     plt.figure(figsize=(8, 6))
     for label, series, marker in zip(labels, results.values(), markers):
         series = series[series.index > 80]
@@ -149,13 +213,13 @@ def main():
             color=colors.pop(0),
         )
     plt.xlabel("Time (s)")
-    plt.ylabel("Average Scherrer Size (nm)")
+    plt.ylabel("Average Radius (nm)")
 
     plt.tight_layout()
     plt.tick_params(axis="both", direction="in", which="both", top=True, right=True)
-    plt.legend(loc="upper right", fontsize=12)
+    plt.legend(loc="best", fontsize=12)
     plt.xlim(0, 375)  # Fixed x-axis limit
-    plt.ylim(0, 30)  # Adjust y-axis limit as needed
+    plt.ylim(0, ymax)  # Adjust y-axis limit as needed
     # Save to same directory as first file
     out_dir = os.path.dirname(file_paths[0])
     out_path = os.path.join(out_dir, "Combined_Average_Scherrer.png")
