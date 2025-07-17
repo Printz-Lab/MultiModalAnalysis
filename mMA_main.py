@@ -12,15 +12,16 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog, simpledialog, messagebox
 
-#ask to select restart_file
 
-root = tk.Tk()
-root.withdraw()  # Hide the root window
-restart_file = filedialog.askopenfilename(
-    title="Select restart file",
-    filetypes=[("Pickle files", "*.pkl")],
-    initialdir=os.path.expanduser("~")  # Start in the user's home directory
-)
+restart_file = None
+#ask to select restart_file
+# root = tk.Tk()
+# root.withdraw()  # Hide the root window
+# restart_file = filedialog.askopenfilename(
+#     title="Select restart file",
+#     filetypes=[("Pickle files", "*.pkl")],
+#     initialdir=os.path.expanduser("~")  # Start in the user's home directory
+# )
 if not restart_file:
     restart_file = None  # If no file is selected, set to None
     
@@ -146,13 +147,8 @@ if testObj.genParams['PL']:
     if type(dfSpectra) is not str:
         dfSpectra[testObj.sampleName + '_Energy_Spectra'] = testObj.plEnergyPost
         dfSpectra.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_PL-Spectra.csv'), index=None)
-        
-    dfSpectra2 = testObj.plotIndividually('PL_', 'spectra', 'Energy (eV)', '_Indv_PL-Spectra_2', testObj.sampleName, testObj.outputPath, testObj.plEnergyPost, testObj.plTimePost, testObj.plIntensityPost.T)
-    if type(dfSpectra2) is not str:
-        dfSpectra2[testObj.sampleName + '_Energy_Spectra'] = testObj.plEnergyPost
-        dfSpectra2.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_PL-Spectra_2.csv'), index=None)
-        
-#%%    
+
+#%%
 
 if testObj.genParams['GIWAXS'] and testObj.genParams['PL'] and testObj.genParams['Logging']:
     

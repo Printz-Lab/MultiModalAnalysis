@@ -95,6 +95,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             plt.legend()
             plt.title('Frame: ' + str(frame_index))
             plt.savefig(os.path.join(outputPath + '/fits/', str(sampleName) + '_GIWAXS-fit_Frame_' + str(frame_index) + '.png'), format = 'png')
+            plt.close()
             # plt.show(block=False)
             # plt.pause(1)
             
@@ -108,6 +109,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             # result.plot(data_kws={'markersize': 1})
             plt.legend()
             plt.title('Frame: ' + str(frame_index))
+            plt.close()
             #plt.show()
         params = [None]*6
         std_error = [None]*3
