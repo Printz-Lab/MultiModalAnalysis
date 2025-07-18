@@ -68,12 +68,13 @@ def plotPL(plParams, sampleName, savePath, energyData, timeData, intensityData, 
         plt.xlabel('Time (s)')
         plt.ylabel('Energy (eV)')
         plt.title(str(sampleName) + ' _2D_Plot')
+        plt.tight_layout()
         plt.savefig(os.path.join(savePath, str(sampleName) + '_PL_Plot_Log'), dpi=300, bbox_inches="tight")
         plt.show(block=False)
         plt.pause(1)
     
     fig = plt.figure(figsize=(7, 5))
-    plt.contourf(timeData, energyData, intensityData, 20, cmap=plt.cm.jet)
+    plt.contourf(timeData, energyData, intensityData, 100, cmap=plt.cm.jet)
     # Make a colorbar for the ContourSet
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Intensity (a.u.)')
@@ -81,6 +82,7 @@ def plotPL(plParams, sampleName, savePath, energyData, timeData, intensityData, 
     plt.xlabel('Time (s)')
     plt.ylabel('Energy (eV)')
     plt.title(str(sampleName) + ' _2D_Plot')
+    plt.tight_layout()
     plt.savefig(os.path.join(savePath, str(sampleName) + '_PL_Plot_Lin'), dpi=300, bbox_inches="tight")
     plt.show(block=False)
     plt.pause(1)

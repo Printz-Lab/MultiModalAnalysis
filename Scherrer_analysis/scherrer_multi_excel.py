@@ -44,22 +44,32 @@ mpl.rcParams.update(
     }
 )
 
+
 def fwhm_correction_instrumental_broadening(
-    measured_fwhm: np.ndarray
+    measured_fwhm: np.ndarray, sheet: str, q: float
 ) -> np.ndarray:
     """
     Corrects the measured FWHM in q-space by removing the instrumental broadening.
     """
     wavelength = 1.2398
-    instrument_fwhm_rad = np.deg2rad(0.1)  # Example instrumental FWHM in radians
-    instrument_dq = (2 * np.pi / wavelength) * instrument_fwhm_rad
-    corrected_fwhm = np.sqrt(np.clip(measured_fwhm**2 - instrument_dq**2, 0.000001, None))
+    instrument_fwhm_theta = 0.05  # Example instrumental FWHM in radians
+    theta = q / (4 * np.pi / wavelength)
+    # print(theta)
+    measured_fwhm_theta = measured_fwhm * (4 * np.pi / wavelength) / np.cos(theta)
+    # print(measured_fwhm_theta[100])
+    # print(instrument_fwhm_theta)
+
+    corrected_fwhm_theta = np.sqrt(
+        np.clip(measured_fwhm_theta**2 - instrument_fwhm_theta**2, 0.00001, None)
+    )
+    corrected_fwhm = corrected_fwhm_theta * np.cos(theta) * wavelength / (4 * np.pi)
     # plt.figure(figsize=(8, 6))
     # plt.plot(measured_fwhm, label='Measured FWHM')
     # plt.plot(corrected_fwhm, label='Corrected FWHM', linestyle='--')
     # plt.ylabel('FWHM (A^-1)')
     # plt.show()
     return corrected_fwhm
+
 
 def calculate_scherrer_size(
     fwhm: np.ndarray, wavelength: float = 1.2398, k: float = 0.9
@@ -69,13 +79,15 @@ def calculate_scherrer_size(
     """
     if np.any(fwhm <= 0):
         raise ValueError("FWHM values must be positive for Scherrer size calculation.")
-    scherrer_size = k * 2 * np.pi / fwhm / 10 / 2 #(4 * np.pi / 3)**(1/3)
+    scherrer_size = k * 2 * np.pi / fwhm / 10 / 2  # (4 * np.pi / 3)**(1/3)
     return scherrer_size
+
+
 def savgol_with_clipping(y, window_length=9, polyorder=3, n_sigma=3):
     """
-    Apply a Savitzky–Golay filter but clip any points that deviate 
+    Apply a Savitzky–Golay filter but clip any points that deviate
     more than n_sigma * std(residual) back to the smoothed curve.
-    
+
     Parameters
     ----------
     y : 1D array
@@ -83,7 +95,7 @@ def savgol_with_clipping(y, window_length=9, polyorder=3, n_sigma=3):
     polyorder : int < window_length
     n_sigma : float
       How many residual‐sigmas to tolerate before clipping.
-    
+
     Returns
     -------
     y_clean : 1D array
@@ -91,8 +103,8 @@ def savgol_with_clipping(y, window_length=9, polyorder=3, n_sigma=3):
     # 1) smooth
     y_smooth = savgol_filter(y, window_length, polyorder)
     # 2) residuals & sigma
-    subset_y = y[100:200]
-    y_smooth_subset = y_smooth[100:200]
+    subset_y = y[130:230]
+    y_smooth_subset = y_smooth[130:230]
     resid = y - y_smooth
     resid_subset = subset_y - y_smooth_subset
     sigma = np.std(resid_subset)
@@ -104,7 +116,8 @@ def savgol_with_clipping(y, window_length=9, polyorder=3, n_sigma=3):
     y_clean[spike_mask] = np.nan
     return y_clean
 
-def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshold=0.93):
+
+def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshold=0.9):
     """
     Reads an Excel file, computes the average Scherrer size vs time across specified sheets.
     If sheets_to_include is None, all sheets are used.
@@ -129,19 +142,42 @@ def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshol
         if df.empty:
             continue
         fwhm = df["FWHM (A^-1)"].to_numpy()
-        fwhm = fwhm_correction_instrumental_broadening(fwhm)
+        q = df["Center q (A^-1)"].to_numpy()
+        q = np.mean(q)  # average q for the sheet
+        fwhm = fwhm_correction_instrumental_broadening(fwhm, sheet, q)
         size = calculate_scherrer_size(fwhm)
         time = df["Time (s)"].values
         # size = df["Scherrer Size (nm)"].values
         # smooth if enough points
         if len(size) >= 9:
-            size = savgol_with_clipping(size, window_length=9, polyorder=3, n_sigma=3)
-        series = pd.Series(data=size, index=time).dropna()
+            size = savgol_with_clipping(size, window_length=9, polyorder=3, n_sigma=1)
+        # Interpolate to fill dropped values in size
+        size = pd.Series(size, index=time).interpolate(method="linear", limit_direction="both").values
+        series = pd.Series(data=size, index=time, name=sheet).dropna()
         series_list.append(series)
     if not series_list:
         return None
     # align and average
     df_all = pd.concat(series_list, axis=1)
+    df_all = df_all.sort_index()
+
+    plt.figure(figsize=(8, 6))
+    for i, col in enumerate(df_all.columns):
+        color = plt.cm.tab10(i % 10)
+        plt.plot(
+            df_all.index,
+            df_all[col],
+            color=color,
+            label=col,
+        )
+    plt.xlabel("Time (s)")
+    plt.ylabel("Scherrer Size (nm)")
+    # plt.title("Scherrer Size vs Time")
+    plt.grid()
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
     avg = df_all.mean(axis=1, skipna=True)
     avg = avg.sort_index()
     return avg
@@ -171,11 +207,11 @@ def main():
     #     return
     # print(file_paths)
     file_paths = [
-        "MAPI_Control_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
-        "MAPI_1pct_AVA_S1_18_30min_GIWAXS_raw_FittingResults.xlsx",
-        # "C:/Users/Aj/Documents/GitHub/MultiModalAnalysis/1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
-        "MAPI_1pct_AVAI_S1_18_5min_GIWAXS_raw_FittingResults.xlsx",
-        "AVACL_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_Sean_control_S1_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_APA_S1_GIWAXS_raw_FittingResults.xlsx",
+        r"E:/MAPI_sean/scherrer/MAPbI3 ABA S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_AHA_GIWAXS_raw_FittingResults.xlsx",
     ]
     # Compute averages for each file
     results = {}
@@ -183,7 +219,7 @@ def main():
         base = os.path.splitext(os.path.basename(path))[0]
         sheets_to_include = ["(001)", "(011)", "(111)"]
         avg_series = compute_average_scherrer(
-            path, sheets_to_include=sheets_to_include, r2_threshold=0.95
+            path, sheets_to_include=sheets_to_include, r2_threshold=0.9
         )
 
         if avg_series is None:
@@ -197,13 +233,19 @@ def main():
 
     # Plot all average curves on one figure
     colors = ["#080808", "#0262F3", "#863AB9", "#0A9628", "#56CCF2"]
-    markers = ["s", "o", "^", "v"]
-    labels = ("Pristine $MAPbI_3$", r"$1\%$ 5-AVA", r"$1\%$ 5-AVAI", r"$1\%$ 5-AVACl")
-    ymax = 25
-    
+    markers = ["s", "o", "^", "v", "d"]
+    labels = (
+        "Pristine $MAPbI_3$",
+        r"3-APA",
+        r"$1\%$ 4-ABA",
+        r"$1\%$ 5-AVA",
+        r"$1\%$ 7-AHA",
+    )
+    ymax = 40
+
     plt.figure(figsize=(8, 6))
     for label, series, marker in zip(labels, results.values(), markers):
-        series = series[series.index > 80]
+        series = series[series.index > 0]
         plt.plot(
             series.index,
             series.values,

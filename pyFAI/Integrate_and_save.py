@@ -13,6 +13,45 @@ from datetime import datetime
 from tqdm import tqdm
 import tkinter as tk
 from tkinter import filedialog, simpledialog
+import matplotlib as mpl
+
+mpl.rcParams.update(
+    {
+        # 1) pick Arial for all sans-serif text…
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        # 2) make mathtext use Arial as well
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.default": "rm",
+        # 3) still your other style settings
+        "font.size": 14,
+        "axes.labelsize": 18,
+        "axes.titlesize": 18,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 14,
+        "figure.figsize": (8, 6),
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "xtick.major.width": 1.2,
+        "ytick.major.width": 1.2,
+        "xtick.minor.width": 1.0,
+        "ytick.minor.width": 1.0,
+        "axes.grid": False,
+        "savefig.dpi": 300,
+        # if you had usetex on, turn it off so mathtext takes over:
+        "text.usetex": False,
+    }
+)
+
 
 # ========== Helper: Extract timestamp from .tif ==========
 def extract_datetime_from_tif(tif_path):
@@ -108,7 +147,7 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
 
     # add the contour plot and a colorbar
     cp = plt.contourf(frame_times, q_vals, intensities.T, levels=100, cmap='viridis')
-    plt.colorbar(cp, location='left')
+    plt.colorbar(cp, location='left', label='Intensity (a.u.)')
 #     pcm = ax.pcolormesh(
 #     frame_times, q_vals,
 #     intensities.T,
@@ -118,10 +157,10 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
 
     # define axis names, ticks, etc.
     q_min, q_max = (0.8, 4)
-    y_ticks = np.linspace(q_min, q_max, 10)  # number of tickmarks
+    # y_ticks = np.linspace(q_min, q_max, 10)  # number of tickmarks
     ax.set_xlabel('Time (s)')
     ax.set_ylabel(r'Q $(\AA^{-1})$')
-    ax.set_yticks(y_ticks)
+    # ax.set_yticks(y_ticks)
     ax.yaxis.tick_right()
     ax.yaxis.set_label_position("right")
     ax.set_ylim(q_min, q_max)

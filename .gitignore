@@ -4,3 +4,4 @@
 *.pyc
 /pyFAI/benchmark
 *.pyc
+*.pyc

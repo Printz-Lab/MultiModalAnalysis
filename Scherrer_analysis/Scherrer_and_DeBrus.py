@@ -177,10 +177,11 @@ def main():
     #     return
     # pprint(Scherrer_file_paths)
     Scherrer_file_paths = [
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_Control_S1_18_30min/GIWAXS/MAPI_Control_S1_18_30min_GIWAXS_raw_LMFIT_FittingResults.xlsx",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/GIWAXS/MAPI_1pct_AVA_S1_18_30min_GIWAXS_raw_LMFIT_FittingResults.xlsx",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVAI_S1_18_5min/GIWAXS/MAPI_1pct_AVAI_S1_18_5min_GIWAXS_raw_LMFIT_FittingResults.xlsx",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVACl_S1_18_5min/GIWAXS/_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_Sean_control_S1_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_APA_S1_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPbI3 ABA S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
+        "E:/MAPI_sean/scherrer/MAPI_1pct_AHA_GIWAXS_raw_FittingResults.xlsx",
     ]
     # Compute averages for each file
     Scherrer_results = {}
@@ -188,7 +189,7 @@ def main():
         base = os.path.splitext(os.path.basename(path))[0]
         sheets_to_include = ["(001)", "(011)", "(111)"]
         avg_series = compute_average_scherrer(
-            path, sheets_to_include=sheets_to_include, r2_threshold=0.95
+            path, sheets_to_include=sheets_to_include, r2_threshold=0.9
         )
 
         if avg_series is None:
@@ -200,31 +201,32 @@ def main():
         print("No data to plot after processing all files.")
         return
 
-    # DeBrus_File_paths = []
+    # Brus_File_paths = []
     # while True:
     #     path = filedialog.askopenfilename(
-    #         title="Select DeBrus CSV file",
+    #         title="Select Brus CSV file",
     #         filetypes=[("CSV files", "*.csv")]
     #     )
     #     if not path:
     #         break
-    #     DeBrus_File_paths.append(path)
+    #     Brus_File_paths.append(path)
     #     if not messagebox.askyesno("Continue", "Do you want to select another file?"):
     #         break
-    # if not DeBrus_File_paths:
+    # if not Brus_File_paths:
     #     print("No files selected, exiting.")
     #     return
-    # pprint(DeBrus_File_paths)
+    # pprint(Brus_File_paths)
 
-    DeBrus_File_paths = [
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_Control_S1_18_30min/output/PL_FitResults_analysis.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults_analysis.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVAI_S1_18_5min/output/PL_FitResults_analysis.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVACl_S1_18_5min/output/PL_FitResults_analysis.csv",
+    Brus_File_paths = [
+        "E:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "E:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "E:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "D:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults_analysis.csv",
+        "E:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
     ]
 
-    DeBrus_results = {}
-    for path in DeBrus_File_paths:
+    Brus_results = {}
+    for path in Brus_File_paths:
         # Extract unique part from the parent directory name
         base = os.path.basename(os.path.dirname(os.path.dirname(path)))
         if not os.path.exists(path):
@@ -236,25 +238,31 @@ def main():
                 print(f"  No data in {base}, skipping.")
                 continue
             # Process the DataFrame as needed
-            DeBrus_results[base] = df
+            Brus_results[base] = df
             print(f"  Processed {base}, {len(df)} rows.")
         except Exception as e:
             print(f"  Error processing {base}: {e}")
 
     # Plot all average curves on one figure
     colors_scherrer = ["#080808", "#0262F3", "#863AB9", "#0A9628", "#56CCF2"]
-    colors_debrus = ["#292929", "#013F9C", "#673588", "#064714", "#2C6B80"]
+    colors_Brus = ["#292929", "#1D68D9", "#8947B5", "#0E8628", "#3EA0C1"]
     markers = ["s", "o", "^", "v"]
-    labels = ("Pristine $MAPbI_3$ SCH", r"$1\%$ 5-AVA SCH", r"$1\%$ 5-AVAI SCH", r"$1\%$ 5-AVACl SCH")
-    labels_debrus = (
-        "Pristine $MAPbI_3$ DB", r"$1\%$ 5-AVA DB", r"$1\%$ 5-AVAI DB", r"$1\%$ 5-AVACl DB"
+    labels = ("Pristine $MAPbI_3$ SCH", "APA", "ABA", "AVA", "AHA")
+    labels_Brus = (
+        "Pristine $MAPbI_3$ Brus",
+        "APA Brus",
+        "ABA Brus",
+        "AVA Brus",
+        "AHA Brus",
     )
-    ymax = 25
+    ymax = 40
 
     plt.figure(figsize=(8, 6))
-    
+
     # Plot Scherrer results
-    for label, series, marker, color in zip(labels, Scherrer_results.values(), markers, colors_scherrer):
+    for label, series, marker, color in zip(
+        labels, Scherrer_results.values(), markers, colors_scherrer
+    ):
         series = series[series.index > 80]
         plt.plot(
             series.index,
@@ -263,10 +271,12 @@ def main():
             linestyle="-",
             label=label,
             color=color,
-            alpha=0.8
+            alpha=0.8,
         )
-    # Plot DeBrus results using the same colors
-    for label, df, marker, color in zip(labels_debrus, DeBrus_results.values(), markers, colors_debrus):
+    # Plot Brus results using the same colors
+    for label, df, marker, color in zip(
+        labels_Brus, Brus_results.values(), markers, colors_Brus
+    ):
         time = df["Time (s)"]
         radii = df["Radius (nm)"]
         plt.plot(
@@ -276,7 +286,7 @@ def main():
             linestyle="--",
             label=label,
             color=color,
-            alpha=0.5
+            alpha=0.5,
         )
     plt.xlabel("Time (s)")
     plt.ylabel("Average Radius (nm)")

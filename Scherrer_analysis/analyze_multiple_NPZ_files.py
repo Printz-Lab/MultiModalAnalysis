@@ -116,9 +116,7 @@ def main():
     # Ask for lattice parameter
     use_cif = messagebox.askyesno("Lattice Parameter", "Read lattice parameter from CIF file?")
     if use_cif:
-        cif_file = filedialog.askopenfilename(
-            title="Select CIF file", filetypes=[("CIF files", "*.cif")]
-        )
+        cif_file = r"Scherrer_analysis\CH3NH3PbI3_cubic.cif"
         if not cif_file:
             print("No CIF selected, exiting.")
             return

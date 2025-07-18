@@ -50,7 +50,6 @@ mpl.rcParams.update(
 )
 
 
-
 # --- Physical models and robust root finding for Brus equation ---
 def integrand(r, R, epsilon, N):
     """Function to integrate."""
@@ -203,6 +202,10 @@ def process_file(csv_path, target_time, regions):
             continue
         R = solve_radius_robust(delta_E, me, mh, epsilon_pvk, epsilon_env, N=20)
         radii.append(R * 1e9 if not np.isnan(R) else np.nan)
+
+    if radii is None or len(radii) == 0:
+        print(f"[ERROR] No valid radii found for {csv_path}.")
+        return None, None, None
     radii = np.array(radii)
 
     # Save analyzed CSV
@@ -270,7 +273,8 @@ def process_file(csv_path, target_time, regions):
         fit_params.append((label, A, tau, C, R2))
     ax2.set_ylabel("Radius (nm)", color="tab:orange")
     ax2.tick_params(axis="y", labelcolor="tab:orange")
-    ax2.set_ylim(0, max(radii) * 1.1)
+    print(radii)
+    ax2.set_ylim(0, 40)
     plt.title(os.path.basename(csv_path))
     plt.tight_layout()
     fig.savefig(os.path.splitext(csv_path)[0] + "_energy_radius.png")
@@ -318,20 +322,22 @@ def main():
     #     print("No files selected, exiting.")
     #     return
     # pprint(paths)
-    paths = [ 
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_Control_S1_18_30min/output/PL_FitResults.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVAI_S1_18_5min/output/PL_FitResults.csv",
-        "K:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVACl_S1_18_5min/output/PL_FitResults.csv",
+    paths = [
+        "E:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults.csv",
+        "E:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults.csv",
+        "E:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults.csv",
+        "D:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults.csv",
+        "E:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults.csv",
     ]
     labels = [
         "Pristine $MAPbI_3$",
+        "1% 3-APA",
+        "1% 4-ABA",
         "1% 5-AVA",
-        "1% 5-AVAI",
-        "1% 5-AVACl",
+        "1% 7-AHA",
     ]
     colors_debrus = ["#292929", "#013F9C", "#673588", "#064714", "#2C6B80"]
-    markers = ["s", "o", "^", "v"]
+    markers = ["s", "o", "^", "v", "d"]
     target_time = 375  # end of experiment in seconds
     regions = {
         "Region1": (83, 101),
@@ -346,8 +352,16 @@ def main():
     # combined plot
     plt.figure(figsize=(8, 6))
     for (label, time, radii), color, marker in zip(combined, colors_debrus, markers):
-        mask = time > 75
-        plt.plot(time[mask], radii[mask], marker=marker, linestyle="-", label=label, color=color, alpha=0.8)
+        mask = time > 0
+        plt.plot(
+            time[mask],
+            radii[mask],
+            marker=marker,
+            linestyle="-",
+            label=label,
+            color=color,
+            alpha=0.8,
+        )
     plt.xlabel("Time (s)")
     plt.ylabel("Radius (nm)")
     plt.legend()

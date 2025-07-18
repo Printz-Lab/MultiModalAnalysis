@@ -5,6 +5,44 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 from scipy.signal import savgol_filter
+import matplotlib as mpl
+
+mpl.rcParams.update(
+    {
+        # 1) pick Arial for all sans-serif text…
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        # 2) make mathtext use Arial as well
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.default": "rm",
+        # 3) still your other style settings
+        "font.size": 14,
+        "axes.labelsize": 18,
+        "axes.titlesize": 18,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 14,
+        "figure.figsize": (6, 8),
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "xtick.major.width": 1.2,
+        "ytick.major.width": 1.2,
+        "xtick.minor.width": 1.0,
+        "ytick.minor.width": 1.0,
+        "axes.grid": False,
+        "savefig.dpi": 300,
+        # if you had usetex on, turn it off so mathtext takes over:
+        "text.usetex": False,
+    }
+)
 
 # Select Excel file
 root = tk.Tk()
@@ -22,7 +60,7 @@ xls = pd.ExcelFile(file_path)
 sheets = xls.sheet_names
 
 # User-defined HKLs to plot (must match sheet names exactly)
-hkls_to_plot = ["(001)", "(003)", "(002)", "(012)"]
+hkls_to_plot = ["(001)", "(011)", "(111)"]
 # hkls_to_plot = ['(011)']
 
 colors = plt.cm.tab10.colors
@@ -72,7 +110,7 @@ for i, sheet in enumerate(hkls_to_plot):
 
     df = pd.read_excel(xls, sheet_name=sheet)
     df = df.sort_values("Time (s)")
-    df_filtered = df[df["R_squared"] >= 0.95]
+    df_filtered = df[df["R_squared"] >= 0.9]
 
     if len(df_filtered) == 0:
         continue

@@ -7,22 +7,79 @@ from tkinter import filedialog
 from scipy.signal import savgol_filter
 # Import plot_data from template_plottin
 from template_plotting import plot_data
+import matplotlib as mpl
+
+mpl.rcParams.update(
+    {
+        # 1) pick Arial for all sans-serif text…
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        # 2) make mathtext use Arial as well
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.default": "rm",
+        # 3) still your other style settings
+        "font.size": 14,
+        "axes.labelsize": 18,
+        "axes.titlesize": 18,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 14,
+        "figure.figsize": (6, 8),
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "xtick.major.width": 1.2,
+        "ytick.major.width": 1.2,
+        "xtick.minor.width": 1.0,
+        "ytick.minor.width": 1.0,
+        "axes.grid": False,
+        "savefig.dpi": 300,
+        # if you had usetex on, turn it off so mathtext takes over:
+        "text.usetex": False,
+    }
+)
+
+
 def fwhm_correction_instrumental_broadening(
-    measured_fwhm: np.ndarray
+    measured_fwhm: np.ndarray, sheet: str, q: float
 ) -> np.ndarray:
     """
     Corrects the measured FWHM in q-space by removing the instrumental broadening.
     """
     wavelength = 1.2398
-    instrument_fwhm_rad = np.deg2rad(0.1)  # Example instrumental FWHM in radians
-    instrument_dq = (2 * np.pi / wavelength) * instrument_fwhm_rad
-    corrected_fwhm = np.sqrt(np.clip(measured_fwhm**2 - instrument_dq**2, 0, None))
+    instrument_fwhm_theta = .1  # Example instrumental FWHM in radians
+    theta = q / (4 * np.pi / wavelength)
+    print(theta)
+    measured_fwhm_theta = measured_fwhm * (4 * np.pi / wavelength)/np.cos(theta) 
+    print(measured_fwhm_theta[100])
+    print(instrument_fwhm_theta)
+
+    corrected_fwhm_theta = np.sqrt(np.clip(measured_fwhm_theta**2 - instrument_fwhm_theta**2, 0.00000001, None))
+    corrected_fwhm = corrected_fwhm_theta * np.cos(theta) * wavelength / (4 * np.pi)
     plt.figure(figsize=(8, 6))
     plt.plot(measured_fwhm, label='Measured FWHM')
     plt.plot(corrected_fwhm, label='Corrected FWHM', linestyle='--')
+    plt.legend()
+    plt.title(f"FWHM Correction for {sheet}")
     plt.ylabel('FWHM (A^-1)')
     plt.show()
     return corrected_fwhm
+
+import numpy as np
+
+# Example usage:
+# measured = [0.15, 0.12, 0.18]  # degrees
+# inst = 0.10                   # degrees
+# corr = correct_fwhm(measured, inst)
+# print("Corrected FWHM (radians):", corr)
+
 
 def calculate_scherrer_size(
     fwhm: np.ndarray, wavelength: float = 1.2398, k: float = 0.9
@@ -58,27 +115,43 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
             print(f"Sheet {sheet} not found in file.")
             continue
 
-        df = pd.read_excel(xls, sheet_name=sheet).sort_values("Time (s)")
-        df_filt = df[df["R_squared"] >= 0.93]
+        df = pd.read_excel(xls, sheet_name=sheet)
+        # drop any rows with non‑numeric times
+        df["Time (s)"] = pd.to_numeric(df["Time (s)"], errors="coerce")
+        df = df.dropna(subset=["Time (s)"])
+
+        df_filt = df[df["R_squared"] >= 0.9].copy()
+        # --- NEW ---
+        # sort by time before you extract arrays
+        df_filt.sort_values("Time (s)", inplace=True)
+        df_filt = df[df["R_squared"] >= 0.9]
         if df_filt.empty:
             continue
         fwhm = df_filt["FWHM (A^-1)"].to_numpy()
-        fwhm = fwhm_correction_instrumental_broadening(fwhm)
+        q = df_filt["Center q (A^-1)"].to_numpy()
+        q = np.mean(q)  # average q for the sheet
+        fwhm = fwhm_correction_instrumental_broadening(fwhm, sheet, q)
         size = calculate_scherrer_size(fwhm)
         time = df_filt["Time (s)"].to_numpy()
         # size = df_filt["Scherrer Size (nm)"].to_numpy()
         if len(size) >= 9:
             size = savgol_filter(size, window_length=9, polyorder=3)
-
-        processed.append(pd.DataFrame({"Time (s)": time, sheet: size}).set_index("Time (s)"))
+        # create a tiny DataFrame and sort its index
+        df_proc = (
+            pd.DataFrame({"Time (s)": time, sheet: size})
+            .set_index("Time (s)")
+            .sort_index()
+        )
+        processed.append(df_proc)
 
     if not processed:
         print("No valid data to plot.")
         return
 
     # Combine into DataFrame for both original and average
-    all_df = pd.concat(processed, axis=1)
+    all_df = pd.concat(processed, axis=1).sort_index()
 
+    
     # 1) Styled plot of original curves
     df_orig = all_df.reset_index().melt(
         id_vars=["Time (s)"], var_name="curve", value_name="Scherrer Size"
@@ -91,7 +164,7 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
 
     # Determine x/y limits and ticks
     x_min = 0
-    x_max = 600  # Fixed limit for original plot
+    x_max = 375  # Fixed limit for original plot
     mask = (df_orig["Time (s)"] >= x_min) & (df_orig["Time (s)"] <= x_max)
     y_max = np.nanmax(df_orig.loc[mask, "Scherrer Size"]) * 1.1
     y_min = np.nanmin(df_orig.loc[mask, "Scherrer Size"]) * 0.9
@@ -175,5 +248,5 @@ if __name__ == "__main__":
     file_path = filedialog.askopenfilename(
         title="Select LMFIT Excel file", filetypes=[("Excel files", "*.xlsx")]
     )
-    hkls_to_plot = ["(001)", "(003)", "(002)", "(022)"]
+    hkls_to_plot = ["(001)", "(011)", "(111)"]
     plot_scherrer_size(file_path, hkls_to_plot)
