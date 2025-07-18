@@ -172,11 +172,17 @@ def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshol
         )
     plt.xlabel("Time (s)")
     plt.ylabel("Scherrer Size (nm)")
+    plt.xlim(0, 375)  # Fixed x-axis limit
+    mask = (df_all.index > 0) & (df_all.index < 375)
+    ymax = df_all[mask].max().max() * 1.1
+    plt.ylim(0, ymax)  # Adjust y-axis limit as needed
     # plt.title("Scherrer Size vs Time")
     plt.grid()
     plt.legend()
     plt.tight_layout()
+    plt.savefig(os.path.join(os.path.dirname(file_path), "Scherrer_Size_vs_Time.png"), dpi=300)
     plt.show()
+    
 
     avg = df_all.mean(axis=1, skipna=True)
     avg = avg.sort_index()
@@ -207,11 +213,11 @@ def main():
     #     return
     # print(file_paths)
     file_paths = [
-        "E:/MAPI_sean/scherrer/MAPI_Sean_control_S1_GIWAXS_raw_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_APA_S1_GIWAXS_raw_FittingResults.xlsx",
-        r"E:/MAPI_sean/scherrer/MAPbI3 ABA S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_AHA_GIWAXS_raw_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_sean_control_S1_30_tube_5min\\GIWAXS\\MAPI_sean_control_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_APA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_APA_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_ABA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_ABA_S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_AVA_S1_20_5min\\GIWAXS\\MAPI_1pct_AVA_S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_AHA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_AHA_GIWAXS_raw_LMFIT_FittingResults.xlsx",
     ]
     # Compute averages for each file
     results = {}
@@ -241,11 +247,13 @@ def main():
         r"$1\%$ 5-AVA",
         r"$1\%$ 7-AHA",
     )
-    ymax = 40
+    ymax = 0.
 
     plt.figure(figsize=(8, 6))
     for label, series, marker in zip(labels, results.values(), markers):
-        series = series[series.index > 0]
+        mask = (series.index > 0) & (series.index < 375)
+        series = series[mask]
+        
         plt.plot(
             series.index,
             series.values,
@@ -254,6 +262,11 @@ def main():
             label=label,
             color=colors.pop(0),
         )
+        print(series.values.max())
+        max = series.values.max()*1.1
+        if max > ymax:
+            ymax = max
+
     plt.xlabel("Time (s)")
     plt.ylabel("Average Radius (nm)")
 

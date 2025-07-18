@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from scipy.integrate import quad
 from scipy.optimize import root_scalar, curve_fit
 from scipy.constants import hbar, pi, e, epsilon_0, m_e, h
@@ -207,6 +208,23 @@ def process_file(csv_path, target_time, regions):
         print(f"[ERROR] No valid radii found for {csv_path}.")
         return None, None, None
     radii = np.array(radii)
+    # Filter noisy parts of radii (e.g., spikes or outliers)
+    radii_filtered = radii.copy()
+    if len(radii_filtered) > 5:
+        # Use a rolling median filter to smooth out spikes
+        window = 5
+        radii_filtered = (
+            pd.Series(radii_filtered)
+            .rolling(window, center=True, min_periods=1)
+            .median()
+            .to_numpy()
+        )
+        # Optionally, mask outliers (e.g., >3 std from median)
+        median = np.nanmedian(radii_filtered)
+        std = np.nanstd(radii_filtered)
+        outlier_mask = np.abs(radii_filtered - median) > 2.5 * std
+        radii_filtered[outlier_mask] = np.nan
+    radii = radii_filtered
 
     # Save analyzed CSV
     out_df = pd.DataFrame(
@@ -273,7 +291,7 @@ def process_file(csv_path, target_time, regions):
         fit_params.append((label, A, tau, C, R2))
     ax2.set_ylabel("Radius (nm)", color="tab:orange")
     ax2.tick_params(axis="y", labelcolor="tab:orange")
-    print(radii)
+    # print(radii)
     ax2.set_ylim(0, 40)
     plt.title(os.path.basename(csv_path))
     plt.tight_layout()
@@ -323,11 +341,11 @@ def main():
     #     return
     # pprint(paths)
     paths = [
-        "E:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults.csv",
-        "E:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults.csv",
-        "E:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults.csv",
-        "D:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults.csv",
-        "E:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults.csv",
+        "G:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults.csv",
+        "G:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults.csv",
+        "G:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults.csv",
+        "G:/MAPI_sean/MAPI_1pct_AVA_S1_20_5min/output/PL_FitResults.csv",
+        "G:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults.csv",
     ]
     labels = [
         "Pristine $MAPbI_3$",
@@ -336,13 +354,14 @@ def main():
         "1% 5-AVA",
         "1% 7-AHA",
     ]
-    colors_debrus = ["#292929", "#013F9C", "#673588", "#064714", "#2C6B80"]
+    colors_debrus = ["#080808", "#0262F3", "#863AB9", "#0A9628", "#E28812"]
+    # colors_debrus = cm.tab10.colors[:len(labels)]
     markers = ["s", "o", "^", "v", "d"]
     target_time = 375  # end of experiment in seconds
     regions = {
-        "Region1": (83, 101),
-        "Region2": (101, 200),
-        "Region3": (200, target_time - 1),
+        "Region1": (38, 84),
+        "Region2": (84, 101),
+        "Region3": (101, target_time - 1),
     }
     combined = []
     for p, label in zip(paths, labels):
@@ -356,7 +375,7 @@ def main():
         plt.plot(
             time[mask],
             radii[mask],
-            marker=marker,
+            # marker=marker,
             linestyle="-",
             label=label,
             color=color,
@@ -366,7 +385,7 @@ def main():
     plt.ylabel("Radius (nm)")
     plt.legend()
     plt.tight_layout()
-    out_comb = "combined_radius.png"
+    out_comb = paths[0].replace(".csv", "_combined_plot.png")
     plt.savefig(out_comb, dpi=300)
     plt.show()
     print(f"Combined plot saved to {out_comb}")

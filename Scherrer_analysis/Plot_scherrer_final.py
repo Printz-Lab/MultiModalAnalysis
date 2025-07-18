@@ -127,13 +127,13 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         df_filt = df[df["R_squared"] >= 0.9]
         if df_filt.empty:
             continue
-        fwhm = df_filt["FWHM (A^-1)"].to_numpy()
-        q = df_filt["Center q (A^-1)"].to_numpy()
-        q = np.mean(q)  # average q for the sheet
-        fwhm = fwhm_correction_instrumental_broadening(fwhm, sheet, q)
-        size = calculate_scherrer_size(fwhm)
+        # fwhm = df_filt["FWHM (A^-1)"].to_numpy()
+        # q = df_filt["Center q (A^-1)"].to_numpy()
+        # q = np.mean(q)  # average q for the sheet
+        # fwhm = fwhm_correction_instrumental_broadening(fwhm, sheet, q)
+        # size = calculate_scherrer_size(fwhm)
         time = df_filt["Time (s)"].to_numpy()
-        # size = df_filt["Scherrer Size (nm)"].to_numpy()
+        size = df_filt["Scherrer Size (nm)"].to_numpy()
         if len(size) >= 9:
             size = savgol_filter(size, window_length=9, polyorder=3)
         # create a tiny DataFrame and sort its index
@@ -154,20 +154,21 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
     
     # 1) Styled plot of original curves
     df_orig = all_df.reset_index().melt(
-        id_vars=["Time (s)"], var_name="curve", value_name="Scherrer Size"
+        id_vars=["Time (s)"], var_name="HKL", value_name="Scherrer Size"
     )
-    fig_o, ax_o = plt.subplots(figsize=(8, 6))
+    df_orig = df_orig[df_orig["Time (s)"] >= 80]
+    fig_o, ax_o = plt.subplots(figsize=(8, 6), constrained_layout=True)
     ax_o.tick_params(direction="in", which="both", right=True, top=True)
-    n = df_orig["curve"].nunique()
+    n = df_orig["HKL"].nunique()
     markers = [tpl_markers[i % len(tpl_markers)] for i in range(n)]
     colors = [tpl_palette[i % len(tpl_palette)] for i in range(n)]
 
     # Determine x/y limits and ticks
     x_min = 0
     x_max = 375  # Fixed limit for original plot
-    mask = (df_orig["Time (s)"] >= x_min) & (df_orig["Time (s)"] <= x_max)
+    mask = (df_orig["Time (s)"] >= x_min+100) & (df_orig["Time (s)"] <= x_max)
     y_max = np.nanmax(df_orig.loc[mask, "Scherrer Size"]) * 1.1
-    y_min = np.nanmin(df_orig.loc[mask, "Scherrer Size"]) * 0.9
+    y_min = 0
     x_ticks = np.linspace(x_min, x_max, 5)
     x_mticks = np.linspace(x_min, x_max, 25)
     y_ticks = np.linspace(y_min, y_max, 6)
@@ -178,7 +179,7 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         x="Time (s)",
         y_scat="Scherrer Size",
         y_line="Scherrer Size",
-        hue="curve",
+        hue="HKL",
         markers=markers,
         palette=colors,
         xlim=(x_min, x_max),
@@ -191,6 +192,14 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         ylabel="Radius (nm)",
         ax=ax_o,
     )
+        # clear existing ticks
+    ax_o.set_xticks([])
+    ax_o.set_yticks([])
+
+    # OR set auto ticks
+    ax_o.tick_params(axis='both', which='both')
+    ax_o.xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
+    ax_o.yaxis.set_major_locator(plt.MaxNLocator(nbins=6))
     plt.tight_layout()
     orig_path = os.path.join(output_dir, "Original_Scherrer_Styled_vs_Time.png")
     fig_o.savefig(orig_path, dpi=300, bbox_inches="tight")
@@ -201,18 +210,19 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
     df_avg = pd.DataFrame({
         "Time (s)": avg_series.index.values,
         "Scherrer Size": avg_series.values,
-        "curve": ["Average"] * len(avg_series),
+        "HKL": ["Average"] * len(avg_series),
     })
+    df_avg = df_avg[df_avg["Time (s)"] >= 80]
     fig_a, ax_a = plt.subplots(figsize=(8, 6))
     ax_a.tick_params(direction="in", which="both", right=True, top=True)
 
 
     x_min_a = 0
-    x_max_a = 600  # Fixed limit for average plot
+    x_max_a = 375  # Fixed limit for average plot
     # Find min/max within bounds of x_min_a and x_max_a
-    mask = (df_avg["Time (s)"] >= x_min_a) & (df_avg["Time (s)"] <= x_max_a)
+    mask = (df_avg["Time (s)"] >= x_min_a+100) & (df_avg["Time (s)"] <= x_max_a)
     y_max_a = np.nanmax(df_avg.loc[mask, "Scherrer Size"]) * 1.1
-    y_min_a = np.nanmin(df_avg.loc[mask, "Scherrer Size"]) * 0.9
+    y_min_a = 0
     xticks_a = np.linspace(x_min_a, x_max_a, 5)
     xmticks_a = np.linspace(x_min_a, x_max_a, 25)
     yticks_a = np.linspace(y_min_a, y_max_a, 6)
@@ -223,7 +233,7 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         x="Time (s)",
         y_scat="Scherrer Size",
         y_line="Scherrer Size",
-        hue="curve",
+        hue="HKL",
         markers=[tpl_markers[0]],
         palette=[tpl_palette[0]],
         xlim=(x_min_a, x_max_a),
@@ -233,9 +243,17 @@ def plot_scherrer_size(file_path: str, hkls_to_plot: list[str], output_dir: str 
         yticks=yticks_a,
         ymticks=ymticks_a,
         xlabel="Time (s)",
-        ylabel="Average Scherrer Size (nm)",
+        ylabel="Average Radius (nm)",
         ax=ax_a,
     )
+        # clear existing ticks
+    ax_a.set_xticks([])
+    ax_a.set_yticks([])
+
+    # OR set auto ticks
+    ax_a.tick_params(axis='both', which='both')
+    ax_a.xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
+    ax_a.yaxis.set_major_locator(plt.MaxNLocator(nbins=6))
     plt.tight_layout()
     avg_path = os.path.join(output_dir, "Average_Scherrer_Styled_vs_Time.png")
     fig_a.savefig(avg_path, dpi=300, bbox_inches="tight")

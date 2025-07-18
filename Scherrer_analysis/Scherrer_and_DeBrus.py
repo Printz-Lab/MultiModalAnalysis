@@ -134,11 +134,11 @@ def compute_average_scherrer(file_path: str, sheets_to_include=None, r2_threshol
         df = df[df["R_squared"] >= r2_threshold]
         if df.empty:
             continue
-        fwhm = df["FWHM (A^-1)"].to_numpy()
-        fwhm = fwhm_correction_instrumental_broadening(fwhm)
-        size = calculate_scherrer_size(fwhm)
+        # fwhm = df["FWHM (A^-1)"].to_numpy()
+        # fwhm = fwhm_correction_instrumental_broadening(fwhm)
+        # size = calculate_scherrer_size(fwhm)
         time = df["Time (s)"].values
-        # size = df["Scherrer Size (nm)"].values
+        size = df["Scherrer Size (nm)"].values
         # smooth if enough points
         if len(size) >= 9:
             size = savgol_with_clipping(size, window_length=9, polyorder=3, n_sigma=3)
@@ -177,11 +177,11 @@ def main():
     #     return
     # pprint(Scherrer_file_paths)
     Scherrer_file_paths = [
-        "E:/MAPI_sean/scherrer/MAPI_Sean_control_S1_GIWAXS_raw_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_APA_S1_GIWAXS_raw_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPbI3 ABA S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_AVA_S1_GIWAXS_raw_FittingResults.xlsx",
-        "E:/MAPI_sean/scherrer/MAPI_1pct_AHA_GIWAXS_raw_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_sean_control_S1_30_tube_5min\\GIWAXS\\MAPI_sean_control_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_APA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_APA_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_ABA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_ABA_S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_AVA_S1_20_5min\\GIWAXS\\MAPI_1pct_AVA_S1_GIWAXS_raw_LMFIT_FittingResults.xlsx",
+        "G:\\MAPI_sean\\MAPI_1pct_AHA_S1_30_tube_5min\\GIWAXS\\MAPI_1pct_AHA_GIWAXS_raw_LMFIT_FittingResults.xlsx",
     ]
     # Compute averages for each file
     Scherrer_results = {}
@@ -218,11 +218,11 @@ def main():
     # pprint(Brus_File_paths)
 
     Brus_File_paths = [
-        "E:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
-        "E:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
-        "E:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
-        "D:/printz_Apr2024/MAPI_YL/working_files/MAPI_1pct_AVA_S1_18_30min/output/PL_FitResults_analysis.csv",
-        "E:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "G:/MAPI_sean/MAPI_sean_control_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "G:/MAPI_sean/MAPI_1pct_APA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "G:/MAPI_sean/MAPI_1pct_ABA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
+        "G:/MAPI_sean/MAPI_1pct_AVA_S1_20_5min/output/PL_FitResults_analysis.csv",
+        "G:/MAPI_sean/MAPI_1pct_AHA_S1_30_tube_5min/output/PL_FitResults_analysis.csv",
     ]
 
     Brus_results = {}
@@ -244,26 +244,50 @@ def main():
             print(f"  Error processing {base}: {e}")
 
     # Plot all average curves on one figure
-    colors_scherrer = ["#080808", "#0262F3", "#863AB9", "#0A9628", "#56CCF2"]
-    colors_Brus = ["#292929", "#1D68D9", "#8947B5", "#0E8628", "#3EA0C1"]
-    markers = ["s", "o", "^", "v"]
-    labels = ("Pristine $MAPbI_3$ SCH", "APA", "ABA", "AVA", "AHA")
+    colors_scherrer = [
+        "#080808", 
+        "#0262F3", 
+        "#863AB9", 
+        "#0A9628", 
+        "#E28812"
+    ]
+    colors_Brus = [
+        "#292929", 
+        "#1D68D9", 
+        "#8947B5", 
+        "#0E8628", 
+        "#D3841D"
+    ]
+    markers = [
+        "s", 
+        "o", 
+        "^", 
+        "v", 
+        "D"
+    ]
+    labels = (
+        "Pristine $MAPbI_3$ SCH",
+        "1% 3-APA SCH",
+        "1% 4-ABA SCH",
+        "1% 5-AVA SCH",
+        "1% 7-AHA SCH"
+    )
     labels_Brus = (
         "Pristine $MAPbI_3$ Brus",
-        "APA Brus",
-        "ABA Brus",
-        "AVA Brus",
-        "AHA Brus",
+        "1% 3-APA Brus",
+        "1% 4-ABA Brus",
+        "1% 5-AVA Brus",
+        "1% 7-AHA Brus",
     )
     ymax = 40
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(9, 6))
 
     # Plot Scherrer results
     for label, series, marker, color in zip(
         labels, Scherrer_results.values(), markers, colors_scherrer
     ):
-        series = series[series.index > 80]
+        series = series[(series.index > 80) & (series.index < 375)]
         plt.plot(
             series.index,
             series.values,
@@ -273,6 +297,7 @@ def main():
             color=color,
             alpha=0.8,
         )
+        ymax = max(ymax, series.values.max()) * 1.1
     # Plot Brus results using the same colors
     for label, df, marker, color in zip(
         labels_Brus, Brus_results.values(), markers, colors_Brus
@@ -282,7 +307,7 @@ def main():
         plt.plot(
             time,
             radii,
-            marker=marker,
+            # marker=marker,
             linestyle="--",
             label=label,
             color=color,
@@ -293,7 +318,7 @@ def main():
 
     plt.tight_layout()
     plt.tick_params(axis="both", direction="in", which="both", top=True, right=True)
-    plt.legend()
+    plt.legend(fontsize=10)
 
     plt.xlim(0, 375)  # Fixed x-axis limit
     plt.ylim(0, ymax)  # Adjust y-axis limit as needed

@@ -2,9 +2,11 @@ import os
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import lines
 import fabio
 import pyFAI
 from pyFAI.io.ponifile import PoniFile
+from pyFAI.calibrant import Calibrant
 from pyFAI.integrator.azimuthal import AzimuthalIntegrator
 from pyFAI.gui.jupyter import subplots, display, plot1d, plot2d
 from PIL import Image
@@ -169,7 +171,7 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
     plt.savefig(os.path.join(save_path, str(sample_name) + '_GIWAXS_Plot'), dpi=300, bbox_inches="tight")
     plt.show()
 
-def plot_Chi_2theta(image_file, poni_file):
+def plot_Chi_2theta(image_file, poni_file, ax=None, label = None, calibrant_file=None):
     """ Plot the 2D image in Chi-2theta space using pyFAI.
     Parameters:
         image (numpy.ndarray): 2D array representing the image data.
@@ -184,8 +186,39 @@ def plot_Chi_2theta(image_file, poni_file):
     # image = np.clip(image, 0, None)  # Clip the image to avoid negative values
     alpha_i = 2*(2*np.pi)/360 # 2 degrees in radians
     
-
     res2d = ai.integrate2d(image, 1024, 1024, method=("no", "csr", "cython")) #convert to q_r and q_z
+    if label is None:
+        label = "GIWAXS Image in Chi-2theta Space"
 
-    plot2d(res2d, 
-           label="GIWAXS Image in Chi-2theta Space")
+    if calibrant_file:
+        plot2d(res2d, 
+            label=label, ax=ax)
+        result = res2d
+
+        poni = PoniFile(data=poni_file)
+        calibrant = Calibrant(wavelength=poni.wavelength) 
+        calibrant.load_file(calibrant_file)
+        img = result.intensity
+        pos_rad = result.radial
+        pos_azim = result.azimuthal
+        from pyFAI import units
+        x_values = None
+        twotheta = np.array([i for i in calibrant.get_2th() if i])  # in radian
+        unit = result.unit
+        unit = unit[0]
+        if unit == units.TTH_DEG:
+            x_values = np.rad2deg(twotheta)
+        elif unit == units.TTH_RAD:
+            x_values = twotheta
+        elif unit == units.Q_A:
+            x_values = (4.e-10 * np.pi / calibrant.wavelength) * np.sin(.5 * twotheta)
+        elif unit == units.Q_NM:
+            x_values = (4.e-9 * np.pi / calibrant.wavelength) * np.sin(.5 * twotheta)
+        if x_values is not None:
+            for x in x_values:
+                line = lines.Line2D([x, x], [pos_azim.min(), pos_azim.max()],
+                                    color='red', linestyle='--', linewidth=1)
+                ax.add_line(line)
+                
+
+    return res2d

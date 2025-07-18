@@ -13,6 +13,45 @@ from bokeh.plotting import figure, output_file, save
 from bokeh.models import LinearColorMapper, ColorBar, NumericInput, LinearAxis, Range1d, HoverTool, CheckboxGroup, CustomJS
 from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.layouts import layout
+import matplotlib as mpl
+
+mpl.rcParams.update(
+    {
+        # 1) pick Arial for all sans-serif text…
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        # 2) make mathtext use Arial as well
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.default": "rm",
+        # 3) still your other style settings
+        "font.size": 14,
+        "axes.labelsize": 18,
+        "axes.titlesize": 18,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 14,
+        "figure.figsize": (8, 6),
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "xtick.major.width": 1.2,
+        "ytick.major.width": 1.2,
+        "xtick.minor.width": 1.0,
+        "ytick.minor.width": 1.0,
+        "axes.grid": False,
+        "savefig.dpi": 300,
+        # if you had usetex on, turn it off so mathtext takes over:
+        "text.usetex": False,
+    }
+)
+
 
 def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
 

@@ -103,7 +103,7 @@ def fit_peak(q_fit, I_fit, q_target, prev_params=None):
 def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_dir, plot_every_n=20):
     frame_results = {}
     for (h, k, l, q_target) in matched_peaks:
-        mask = (q >= q_target - 0.08) & (q <= q_target + 0.08)
+        mask = (q >= q_target - 0.06) & (q <= q_target + 0.06)
         if np.sum(mask) < 5:
             continue
         q_fit = q[mask]
@@ -146,7 +146,11 @@ def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_
                 fit_subfolder = os.path.join(output_dir, f'{hkl_str}')
                 plt.figure(figsize=(6, 4))
                 plt.plot(q_fit, I_fit, 'k.', label='Data')
-                plt.plot(q_fit, fit_result.best_fit, 'r-', label='Fit')
+                # plt.plot(q_fit, fit_result.best_fit, 'r-', label='Fit')
+                q_dense = np.linspace(min(q_fit), max(q_fit), 1000)
+                I_smooth = fit_result.eval(x=q_dense)
+                plt.plot(q_dense, I_smooth, 'r-', label='Fit')
+
                 plt.axvline(popt['peak_center'], color='blue', linestyle='--', label='Peak Center')
                 plt.axvline(popt['peak_center'] - fwhm/2, color='green', linestyle='--', label='FWHM Left')
                 plt.axvline(popt['peak_center'] + fwhm/2, color='green', linestyle='--', label='FWHM Right')
@@ -159,27 +163,28 @@ def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_
                 plt.savefig(os.path.join(fit_subfolder, f'fit_{hkl_str}_frame{frame_idx}.png'))
                 # print(f"Saved fit plot for frame {frame_idx} to {fit_subfolder}")
                 plt.close()
-            # Plot full 1D profile with HKL vlines every N frames
-            if (frame_idx % plot_every_n) == 0 or (60 < frame_idx < 80):
-                vline_subfolder = os.path.join(output_dir, f'VlinePlots')
-                os.makedirs(vline_subfolder, exist_ok=True)
-                plt.figure(figsize=(8,5))
-                plt.plot(q, I, label=f'Frame {frame_idx}')
-                for (h, k, l, q_target) in matched_peaks:
-                    plt.axvline(q_target, color='r', linestyle='--', alpha=0.5)
-                    plt.text(q_target, np.max(I)*0.9, f'({h}{k}{l})', rotation=90, fontsize=8, ha='center')
-                plt.xlabel('q (A$^{-1}$)')
-                plt.xlim(.5, max(q))
-                plt.ylabel('Intensity (a.u.)')
-                plt.title(f'1D Pattern with HKLs Frame {frame_idx}')
-                plt.legend()
-                plt.grid()
-                vline_plot_file = os.path.join(vline_subfolder, f'Frame{frame_idx}_HKL_Vlines.png')
-                plt.savefig(vline_plot_file)
-                plt.close()
-
         except Exception:
             continue
+            # Plot full 1D profile with HKL vlines every N frames
+    if (frame_idx % plot_every_n) == 0 or (60 < frame_idx < 80):
+        vline_subfolder = os.path.join(output_dir, f'VlinePlots')
+        os.makedirs(vline_subfolder, exist_ok=True)
+        plt.figure(figsize=(8,5))
+        plt.plot(q, I, label=f'Frame {frame_idx}')
+        for (h, k, l, q_target) in matched_peaks:
+            plt.axvline(q_target, color='r', linestyle='--', alpha=0.5)
+            plt.text(q_target, np.max(I)*0.9, f'({h}{k}{l})', rotation=90, fontsize=8, ha='center')
+        plt.xlabel('q (A$^{-1}$)')
+        plt.xlim(.5, max(q))
+        plt.ylabel('Intensity (a.u.)')
+        plt.title(f'1D Pattern with HKLs Frame {frame_idx}')
+        plt.legend()
+        plt.grid()
+        vline_plot_file = os.path.join(vline_subfolder, f'Frame{frame_idx}_HKL_Vlines.png')
+        plt.savefig(vline_plot_file)
+        plt.close()
+
+        
     return frame_idx, frame_results
 
 # Main pipeline
