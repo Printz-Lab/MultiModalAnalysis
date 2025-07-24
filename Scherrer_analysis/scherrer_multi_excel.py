@@ -45,6 +45,7 @@ mpl.rcParams.update(
 )
 
 
+
 def fwhm_correction_instrumental_broadening(
     measured_fwhm: np.ndarray, sheet: str, q: float
 ) -> np.ndarray:

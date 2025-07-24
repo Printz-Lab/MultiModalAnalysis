@@ -14,13 +14,12 @@ from tkinter import filedialog, simpledialog, messagebox
 
 
 restart_file = None
-#ask to select restart_file
+# ask to select restart_file
 # root = tk.Tk()
 # root.withdraw()  # Hide the root window
 # restart_file = filedialog.askopenfilename(
 #     title="Select restart file",
 #     filetypes=[("Pickle files", "*.pkl")],
-#     initialdir=os.path.expanduser("~")  # Start in the user's home directory
 # )
 if not restart_file:
     restart_file = None  # If no file is selected, set to None

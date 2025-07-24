@@ -148,8 +148,12 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
     ax = fig.add_axes((left, bottom, width, height))
 
     # add the contour plot and a colorbar
+    intensities = intensities**0.25  # square root for better visualization
     cp = plt.contourf(frame_times, q_vals, intensities.T, levels=100, cmap='viridis')
-    plt.colorbar(cp, location='left', label='Intensity (a.u.)')
+    cb = fig.colorbar(cp, location='left')
+    cb.locator = mpl.ticker.MaxNLocator(nbins=5)
+    cb.update_ticks()
+    cb.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$')
 #     pcm = ax.pcolormesh(
 #     frame_times, q_vals,
 #     intensities.T,
@@ -158,7 +162,7 @@ def save_and_plot(q_vals, frame_times, intensities, save_path, sample_name):
 #     fig.colorbar(pcm, ax=ax, label="Intensity", location='left')
 
     # define axis names, ticks, etc.
-    q_min, q_max = (0.8, 4)
+    q_min, q_max = (0.8, 3.5)  # adjust these limits as needed
     # y_ticks = np.linspace(q_min, q_max, 10)  # number of tickmarks
     ax.set_xlabel('Time (s)')
     ax.set_ylabel(r'Q $(\AA^{-1})$')
@@ -189,10 +193,10 @@ def plot_Chi_2theta(image_file, poni_file, ax=None, label = None, calibrant_file
     res2d = ai.integrate2d(image, 1024, 1024, method=("no", "csr", "cython")) #convert to q_r and q_z
     if label is None:
         label = "GIWAXS Image in Chi-2theta Space"
-
-    if calibrant_file:
-        plot2d(res2d, 
+    plot2d(res2d, 
             label=label, ax=ax)
+    if calibrant_file:
+        
         result = res2d
 
         poni = PoniFile(data=poni_file)

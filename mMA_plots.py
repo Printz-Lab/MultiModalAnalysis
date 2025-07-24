@@ -185,19 +185,27 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     
     if genParams['PL']:
         # define subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(6, 9), sharex=True, gridspec_kw={'height_ratios': [2, 2, 1]})
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(9,9), sharex=True, gridspec_kw={'height_ratios': [2, 2, 1]})
         
         # PL plot
         # removing negative points from data (important for log plot)
         intPL = np.where(intPL < 1, 1, intPL)
-        logIntPL = np.log(intPL)
-        i_max = logIntPL.max()
-        plt.setp(ax1.get_xticklabels(), fontsize=25)
-        cp1 = ax1.contourf(timePL, energyPL, logIntPL/i_max, np.linspace(0/i_max,1, 100),cmap='gist_heat')
+        # intPL = intPL / intPL.max()  # normalize to max value
+        # intPL = np.log(intPL)
+        # i_max = logIntPL.max()
+
+        plt.setp(ax1.get_xticklabels())
+        intPL = intPL**0.25  # square root for better visualization
+        # Create non-uniform levels to emphasize lower intensities
+        max_int = intPL.max()
+
+        cp1 = ax1.contourf(timePL, energyPL, intPL, 100,cmap='plasma')
         cbax1 = fig.add_axes([0.89, 0.66, 0.03, 0.3])
-        cb1 = fig.colorbar(cp1, ax = ax1, cax = cbax1, ticks=np.linspace(0,1,2))
-        cb1.set_label(' Norm. Intensity', fontsize = 12, labelpad=-3)
-        ax1.set_ylabel('Energy (eV)', fontsize = 12)
+        cb1 = fig.colorbar(cp1, ax=ax1, cax=cbax1)
+        cb1.locator = mpl.ticker.MaxNLocator(nbins=5)
+        cb1.update_ticks()
+        cb1.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$', fontsize=16, )
+        ax1.set_ylabel('Energy (eV)')
     
         # Inset graph for PL plot
         inset = False # set True if zoomed inset is desired, change to False otherwise
@@ -244,22 +252,25 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     # define ranges and limits
     i_max = intGIWAXS.max()
     i_min = intGIWAXS.min()
+    intGIWAXS = intGIWAXS**0.25  # square root for better visualization
     
-    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T/i_max, np.linspace(i_min/i_max, 1, 100), cmap=plt.get_cmap('Greys'))
+    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T, 100, cmap=plt.get_cmap('viridis'))
     cbax2 = fig.add_axes(giwaxsBarPos)
-    cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2, ticks = np.linspace(i_min/i_max, 1, 2))
-    cb2.set_label('Norm. Intensity', fontsize = 12, labelpad=-1)
-    ax2.set_ylabel(r'q ($\AA^{-1}$)', fontsize = 12)
+    cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2)
+    cb2.locator = mpl.ticker.MaxNLocator(nbins=5)
+    cb2.update_ticks()
+    cb2.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$')
+    ax2.set_ylabel(r'q ($\AA^{-1}$)')
 
     # Logging plot
     ax3.plot(logData.Time, logData.Pyrometer, 'r-')
-    ax3.set_xlabel('Time (s)', fontsize = 12)
-    ax3.set_ylabel(r'Temperature ($^{\circ}$C)', fontsize = 12, color='r')
+    ax3.set_xlabel('Time (s)')
+    ax3.set_ylabel(r'Temperature ($^{\circ}$C)', color='r')
     # ax3.set_ylim([0, 105])
     if not genParams['TempOld']:
         ax4 = ax3.twinx()
         ax4.plot(logData.Time, logData.Spin_Motor, 'b-')
-        ax4.set_ylabel(r'Spin speed (rpm)', fontsize = 12, color='b')
+        ax4.set_ylabel(r'Spin speed (rpm)', color='b')
         plt.subplots_adjust(right=0.88, top=0.97, bottom = 0.1, hspace=0.1)
     else:
         plt.subplots_adjust(right=0.88, top=0.97, bottom = 0.1, hspace=0.1)

@@ -212,7 +212,17 @@ if __name__ == "__main__":
     I_middle = intensity[middle_idx, :]
     peak_indices, _ = find_peaks(I_middle, height=np.max(I_middle)*0.1, distance=5)
     q_peaks = q[peak_indices]
-    matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
+    # matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
+    # Manually define HKLs to fit (e.g., [(1,0,0), (1,1,0), (1,1,1)])
+    manual_hkls = [(1, 0, 0), (1, 1, 0), (1, 1, 1),(2,0,0), (2,1,0), (2,2,0), (3,0,0)]  # Edit this list as needed
+
+    # Find corresponding q values for these HKLs
+    matched_peaks = []
+    for hkl in manual_hkls:
+        for h, k, l, q_hkl in hkl_peaks:
+            if (h, k, l) == hkl:
+                matched_peaks.append((h, k, l, q_hkl))
+                break
 
     all_results = {}
     prev_fit_params = {}
