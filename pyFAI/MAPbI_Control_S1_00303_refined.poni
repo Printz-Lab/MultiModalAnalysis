@@ -1,0 +1,36 @@
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Fri Jul 25 13:24:16 2025
+poni_version: 2.1
+Detector: Pilatus1M
+Detector_config: {"orientation": 3}
+Distance: 0.19084552769449797
+Poni1: 0.08598982743085198
+Poni2: 0.044222719750587794
+Rot1: -0.6514116308944798
+Rot2: 0.02210132003189081
+Rot3: 0.0
+Wavelength: 1.2398419843320025e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Fri Jul 25 13:24:17 2025
+poni_version: 2.1
+Detector: Pilatus1M
+Detector_config: {"orientation": 3}
+Distance: 0.19062816630943427
+Poni1: 0.08594418244942754
+Poni2: 0.04414394703525105
+Rot1: -0.6514116308944798
+Rot2: 0.02210132003189081
+Rot3: 0.0
+Wavelength: 1.2398419843320025e-10
+# Nota: C-Order, 1 refers to the Y axis, 2 to the X axis
+# Calibration done on Fri Jul 25 13:24:18 2025
+poni_version: 2.1
+Detector: Pilatus1M
+Detector_config: {"orientation": 3}
+Distance: 0.19050270650704076
+Poni1: 0.08596118711091248
+Poni2: 0.04411788002132389
+Rot1: -0.6514116308944798
+Rot2: 0.02210132003189081
+Rot3: 0.0
+Wavelength: 1.2398419843320025e-10

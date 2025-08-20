@@ -259,7 +259,7 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2)
     cb2.locator = mpl.ticker.MaxNLocator(nbins=5)
     cb2.update_ticks()
-    cb2.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$')
+    cb2.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$', fontsize=16)
     ax2.set_ylabel(r'q ($\AA^{-1}$)')
 
     # Logging plot

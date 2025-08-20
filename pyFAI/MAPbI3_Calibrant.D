@@ -1,4 +1,4 @@
-# Calibrant file for MAPbI3
+# Calibrant file for Cubic MAPbI3
 6.3100
 4.4618
 3.6431

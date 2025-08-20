@@ -175,7 +175,7 @@ def process_frame(frame_idx, q, time, I, matched_peaks, prev_fit_params, output_
             plt.axvline(q_target, color='r', linestyle='--', alpha=0.5)
             plt.text(q_target, np.max(I)*0.9, f'({h}{k}{l})', rotation=90, fontsize=8, ha='center')
         plt.xlabel('q (A$^{-1}$)')
-        plt.xlim(.5, max(q))
+        plt.xlim(.4, max(q))
         plt.ylabel('Intensity (a.u.)')
         plt.title(f'1D Pattern with HKLs Frame {frame_idx}')
         plt.legend()
