@@ -10,9 +10,24 @@ import numpy as np
 import os
 import pandas as pd
 import tkinter as tk
+from tkinter import filedialog, simpledialog, messagebox
 
 
-testObj = mMA_class.MMAnalysis("Testsample")
+restart_file = None
+# ask to select restart_file
+# root = tk.Tk()
+# root.withdraw()  # Hide the root window
+# restart_file = filedialog.askopenfilename(
+#     title="Select restart file",
+#     filetypes=[("Pickle files", "*.pkl")],
+# )
+if not restart_file:
+    restart_file = None  # If no file is selected, set to None
+    
+
+testObj = mMA_class.MMAnalysis("Testsample", 
+    restart_file=restart_file
+    )
 #%%
 if testObj.genParams['Logging']:
             
@@ -29,7 +44,7 @@ if testObj.genParams['Logging']:
         else:
             #Finding the start time automatically
             testObj.suggestedLogTimeIdx = next(x for x, val in enumerate(testObj.logDataRaw.Spin_Motor) if val > 0) 
-            #print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
+            print("Automated guess for the starting time is " + str(testObj.logDataRaw.Time[testObj.suggestedLogTimeIdx]) + ' s')
 
             testObj.plotLog(True, True, testObj.sampleName, testObj.outputPath, testObj.logDataRaw)
         
@@ -83,7 +98,7 @@ if testObj.genParams['GIWAXS']:
             
             fitting = False
     
-    dfPatterns = testObj.plotIndividually('GIWAXS_', 'patterns', 'q ($\AA$)', '_Indv_GIWAXS-Patterns', testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost)
+    dfPatterns = testObj.plotIndividually('GIWAXS_', 'patterns', r'q ($\AA$)', '_Indv_GIWAXS-Patterns', testObj.sampleName, testObj.outputPath, testObj.giwaxsQPost, testObj.giwaxsTimePost, testObj.giwaxsIntensityPost)
     if type(dfPatterns) is not str:
         dfPatterns[testObj.sampleName + '_q_Patterns'] = testObj.giwaxsQPost
         dfPatterns.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_GIWAXS-Patterns.csv'), index=None)
@@ -131,13 +146,8 @@ if testObj.genParams['PL']:
     if type(dfSpectra) is not str:
         dfSpectra[testObj.sampleName + '_Energy_Spectra'] = testObj.plEnergyPost
         dfSpectra.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_PL-Spectra.csv'), index=None)
-        
-    dfSpectra2 = testObj.plotIndividually('PL_', 'spectra', 'Energy (eV)', '_Indv_PL-Spectra_2', testObj.sampleName, testObj.outputPath, testObj.plEnergyPost, testObj.plTimePost, testObj.plIntensityPost.T)
-    if type(dfSpectra2) is not str:
-        dfSpectra2[testObj.sampleName + '_Energy_Spectra'] = testObj.plEnergyPost
-        dfSpectra2.to_csv(os.path.join(testObj.outputPath, testObj.sampleName + '_Indv_PL-Spectra_2.csv'), index=None)
-        
-#%%    
+
+#%%
 
 if testObj.genParams['GIWAXS'] and testObj.genParams['PL'] and testObj.genParams['Logging']:
     

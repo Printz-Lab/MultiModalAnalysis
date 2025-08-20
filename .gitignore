@@ -1,0 +1,10 @@
+*.pyc
+*.png
+*.pyc
+*.pyc
+/pyFAI/benchmark
+*.pyc
+*.pyc
+__pycache__/mMA_importing.cpython-313.pyc
+*.pyc
+*.pyc

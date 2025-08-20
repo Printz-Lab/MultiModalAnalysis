@@ -13,6 +13,45 @@ from bokeh.plotting import figure, output_file, save
 from bokeh.models import LinearColorMapper, ColorBar, NumericInput, LinearAxis, Range1d, HoverTool, CheckboxGroup, CustomJS
 from bokeh.models.layouts import TabPanel, Tabs
 from bokeh.layouts import layout
+import matplotlib as mpl
+
+mpl.rcParams.update(
+    {
+        # 1) pick Arial for all sans-serif text…
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial"],
+        # 2) make mathtext use Arial as well
+        "mathtext.fontset": "custom",
+        "mathtext.rm": "Arial",
+        "mathtext.it": "Arial:italic",
+        "mathtext.bf": "Arial:bold",
+        "mathtext.default": "rm",
+        # 3) still your other style settings
+        "font.size": 14,
+        "axes.labelsize": 18,
+        "axes.titlesize": 18,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 14,
+        "figure.figsize": (8, 6),
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "xtick.major.width": 1.2,
+        "ytick.major.width": 1.2,
+        "xtick.minor.width": 1.0,
+        "ytick.minor.width": 1.0,
+        "axes.grid": False,
+        "savefig.dpi": 300,
+        # if you had usetex on, turn it off so mathtext takes over:
+        "text.usetex": False,
+    }
+)
+
 
 def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
 
@@ -34,7 +73,7 @@ def plotGIWAXS(sample_name, save_path, q, frame_time, intensity):
     # create an empty figure with the following dimensions
     fig = plt.figure(figsize=(7, 5))
     left, bottom, width, height = 0.1, 0.1, 0.8, 0.8
-    ax = fig.add_axes([left, bottom, width, height])
+    ax = fig.add_axes((left, bottom, width, height))
 
     # add the contour plot and a colorbar
     cp = plt.contourf(frame_time, q, intensity.T)
@@ -68,12 +107,13 @@ def plotPL(plParams, sampleName, savePath, energyData, timeData, intensityData, 
         plt.xlabel('Time (s)')
         plt.ylabel('Energy (eV)')
         plt.title(str(sampleName) + ' _2D_Plot')
+        plt.tight_layout()
         plt.savefig(os.path.join(savePath, str(sampleName) + '_PL_Plot_Log'), dpi=300, bbox_inches="tight")
         plt.show(block=False)
         plt.pause(1)
     
     fig = plt.figure(figsize=(7, 5))
-    plt.contourf(timeData, energyData, intensityData, 20, cmap=plt.cm.jet)
+    plt.contourf(timeData, energyData, intensityData, 100, cmap=plt.cm.jet)
     # Make a colorbar for the ContourSet
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Intensity (a.u.)')
@@ -81,6 +121,7 @@ def plotPL(plParams, sampleName, savePath, energyData, timeData, intensityData, 
     plt.xlabel('Time (s)')
     plt.ylabel('Energy (eV)')
     plt.title(str(sampleName) + ' _2D_Plot')
+    plt.tight_layout()
     plt.savefig(os.path.join(savePath, str(sampleName) + '_PL_Plot_Lin'), dpi=300, bbox_inches="tight")
     plt.show(block=False)
     plt.pause(1)
@@ -144,19 +185,27 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     
     if genParams['PL']:
         # define subplots
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(6, 9), sharex=True, gridspec_kw={'height_ratios': [2, 2, 1]})
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(9,9), sharex=True, gridspec_kw={'height_ratios': [2, 2, 1]})
         
         # PL plot
         # removing negative points from data (important for log plot)
         intPL = np.where(intPL < 1, 1, intPL)
-        logIntPL = np.log(intPL)
-        i_max = logIntPL.max()
-        plt.setp(ax1.get_xticklabels(), fontsize=25)
-        cp1 = ax1.contourf(timePL, energyPL, logIntPL/i_max, np.linspace(0/i_max,1, 100),cmap='gist_heat')
+        # intPL = intPL / intPL.max()  # normalize to max value
+        # intPL = np.log(intPL)
+        # i_max = logIntPL.max()
+
+        plt.setp(ax1.get_xticklabels())
+        intPL = intPL**0.25  # square root for better visualization
+        # Create non-uniform levels to emphasize lower intensities
+        max_int = intPL.max()
+
+        cp1 = ax1.contourf(timePL, energyPL, intPL, 100,cmap='plasma')
         cbax1 = fig.add_axes([0.89, 0.66, 0.03, 0.3])
-        cb1 = fig.colorbar(cp1, ax = ax1, cax = cbax1, ticks=np.linspace(0,1,2))
-        cb1.set_label(' Norm. Intensity', fontsize = 12, labelpad=-3)
-        ax1.set_ylabel('Energy (eV)', fontsize = 12)
+        cb1 = fig.colorbar(cp1, ax=ax1, cax=cbax1)
+        cb1.locator = mpl.ticker.MaxNLocator(nbins=5)
+        cb1.update_ticks()
+        cb1.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$', fontsize=16, )
+        ax1.set_ylabel('Energy (eV)')
     
         # Inset graph for PL plot
         inset = False # set True if zoomed inset is desired, change to False otherwise
@@ -203,22 +252,25 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     # define ranges and limits
     i_max = intGIWAXS.max()
     i_min = intGIWAXS.min()
+    intGIWAXS = intGIWAXS**0.25  # square root for better visualization
     
-    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T/i_max, np.linspace(i_min/i_max, 1, 100), cmap=plt.get_cmap('Greys'))
+    cp2 = ax2.contourf(timeGIWAXS, q, intGIWAXS.T, 100, cmap=plt.get_cmap('viridis'))
     cbax2 = fig.add_axes(giwaxsBarPos)
-    cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2, ticks = np.linspace(i_min/i_max, 1, 2))
-    cb2.set_label('Norm. Intensity', fontsize = 12, labelpad=-1)
-    ax2.set_ylabel(r'q ($\AA^{-1}$)', fontsize = 12)
+    cb2 = fig.colorbar(cp2, ax = ax2, cax=cbax2)
+    cb2.locator = mpl.ticker.MaxNLocator(nbins=5)
+    cb2.update_ticks()
+    cb2.set_label('Gamma-Adjusted Intensity \n $\\gamma = 0.25$', fontsize=16)
+    ax2.set_ylabel(r'q ($\AA^{-1}$)')
 
     # Logging plot
     ax3.plot(logData.Time, logData.Pyrometer, 'r-')
-    ax3.set_xlabel('Time (s)', fontsize = 12)
-    ax3.set_ylabel(r'Temperature ($^{\circ}$C)', fontsize = 12, color='r')
+    ax3.set_xlabel('Time (s)')
+    ax3.set_ylabel(r'Temperature ($^{\circ}$C)', color='r')
     # ax3.set_ylim([0, 105])
     if not genParams['TempOld']:
         ax4 = ax3.twinx()
         ax4.plot(logData.Time, logData.Spin_Motor, 'b-')
-        ax4.set_ylabel(r'Spin speed (rpm)', fontsize = 12, color='b')
+        ax4.set_ylabel(r'Spin speed (rpm)', color='b')
         plt.subplots_adjust(right=0.88, top=0.97, bottom = 0.1, hspace=0.1)
     else:
         plt.subplots_adjust(right=0.88, top=0.97, bottom = 0.1, hspace=0.1)

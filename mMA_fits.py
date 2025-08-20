@@ -87,7 +87,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             plt.plot(x, result.init_fit, '--', label='initial guess')
             plt.plot(x, result.best_fit, '-', label='best fit')
             plt.fill_between(x, result.best_fit-dely, result.best_fit+dely, 
-                             color='#ABABAB', label='3$\sigma$ - uncertainty band')
+                             color='#ABABAB', label=r'3$\sigma$ - uncertainty band')
 
             plt.xlabel(r'q $(\AA)$')
             plt.ylabel(r'Intensity (au)')
@@ -95,8 +95,9 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             plt.legend()
             plt.title('Frame: ' + str(frame_index))
             plt.savefig(os.path.join(outputPath + '/fits/', str(sampleName) + '_GIWAXS-fit_Frame_' + str(frame_index) + '.png'), format = 'png')
-            plt.show(block=False)
-            plt.pause(1)
+            plt.close()
+            # plt.show(block=False)
+            # plt.pause(1)
             
 
     elif len(peaks) == 0:
@@ -108,6 +109,7 @@ def fit_single_frame(lowQ, highQ, q, intensity, frame_index, frames_to_plot, sam
             # result.plot(data_kws={'markersize': 1})
             plt.legend()
             plt.title('Frame: ' + str(frame_index))
+            plt.close()
             #plt.show()
         params = [None]*6
         std_error = [None]*3
@@ -147,6 +149,7 @@ def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, 
                     # for higher efficiency, the init_params are now changed to the 
                     # fit values for next scan. However, if the initial frame is 
                     # wrongly identified to contain a peak, this might lead to problems
+                    init_params = {}
                     init_params['amplitude'] = params[0]
                     init_params['center'] = params[1]
                     init_params['sigma'] = params[2]
@@ -158,7 +161,7 @@ def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, 
     fig, ax1 = plt.subplots(figsize=(7, 5))
     plot1, = ax1.plot(frames, center, label='center')
     ax2 = ax1.twinx()
-    plot2, = ax2.plot(frames, sigma, 'g', label='$\sigma$')
+    plot2, = ax2.plot(frames, sigma, 'g', label=r'$\sigma$')
     ax1.set_xlabel('Frame #')
     ax1.set_ylabel(r'q ($\AA^{-1}$)')
     ax2.set_ylabel(r' $\sigma$ ($\AA^{-1}$)')
@@ -172,11 +175,11 @@ def fit_several_frames(q, time, intensity, show_every, lowQ, highQ, sampleName, 
     # saving peak fit params in separate csv files
     params_to_save = {sampleName + '_' + hkl + '_time (s)' : time,
                       sampleName + '_' + hkl + '_amplitude (au)' : amplitude, 
-                      sampleName + '_' + hkl + '_center ($\AA$)' : center, 
-                      sampleName + '_' + hkl + '_sigma ($\AA$)' : sigma, 
+                      sampleName + '_' + hkl + r'_center ($\AA$)' : center, 
+                      sampleName + '_' + hkl + r'_sigma ($\AA$)' : sigma, 
                       sampleName + '_' + hkl + '_std error amplitude (au)' : unc_a, 
-                      sampleName + '_' + hkl + '_std error center ($\AA$)' : unc_c, 
-                      sampleName + '_' + hkl + '_std error sigma ($\AA$)' : unc_s}
+                      sampleName + '_' + hkl + r'_std error center ($\AA$)' : unc_c, 
+                      sampleName + '_' + hkl + r'_std error sigma ($\AA$)' : unc_s}
     
     df = pd.DataFrame(params_to_save)
     df = df.replace(np.nan, 'NaN') 
@@ -245,7 +248,7 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
         idxUpperTH[i] = next(xEnd for xEnd, valEnd in enumerate(df_yCut) if valEnd > peakUpperTH[i])
         
     firstSpectrum = True
-    for i in range(0, np.shape(df_fit)[1]):
+    for i in tqdm(range(0, np.shape(df_fit)[1])):
         
         # get y values
         yVals[:, i] = np.where(yVals[:, i] == float('inf'), 5, yVals[:, i])
@@ -368,8 +371,9 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
             plt.ylabel('Intensity (a.u.)')
             plt.title('Time: ' + str(df_xCutFit[i]))
             plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-            plt.show(block=False)
-            plt.pause(1)
+            plt.close()
+            # plt.show(block=False)
+            # plt.pause(1)
             
             if plParams['logplots']:
                 plt.figure(figsize=(6, 5))
@@ -380,8 +384,9 @@ def plFitting(plParams, df_yCut, df_xCutFit, df_fit, show_every, numGauss, peakL
                 plt.ylabel('Log-Intensity (a.u.)')
                 plt.title('Time: ' + str(df_xCutFit[i]))
                 plt.savefig(os.path.join(name + '/fits/', str(name_d) + '_PL-fit_Log_' + str(int(df_xCutFit[i])) + '_s.png'), format = 'png')
-                plt.show(block=False)
-                plt.pause(1)
+                plt.close()
+                # plt.show(block=False)
+                # plt.pause(1)
 
     # Plotting the time-evolution of the peak-positions and intensities
     for i in range(0, int(numGauss)):
