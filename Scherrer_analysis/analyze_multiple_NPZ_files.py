@@ -42,6 +42,17 @@ def analyze_npz(npz_file: str, a_lattice: float, output_root: str, plot_every_n:
     q_peaks = q[idxs]
     matched_peaks = match_peaks_to_hkl(q_peaks, hkl_peaks)
 
+    # For simplicity, manually select a subset of HKLs to fit, Comment this out if you want to fit all detected peaks
+    manual_hkls = [(1, 0, 0), (1, 1, 0), (1, 1, 1),(2,0,0), (2,1,0), (2,2,0), (3,0,0), (3,1,0)]  # Edit this list as needed
+
+    # Find corresponding q values for these HKLs
+    matched_peaks = []
+    for hkl in manual_hkls:
+        for h, k, l, q_hkl in hkl_peaks:
+            if (h, k, l) == hkl:
+                matched_peaks.append((h, k, l, q_hkl))
+                break
+
     # Prepare output directories
     base = os.path.splitext(os.path.basename(npz_file))[0]
     out_dir = os.path.join(output_root, base + '_fit_plots')

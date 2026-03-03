@@ -150,13 +150,13 @@ def plotStacked(genParams, sampleName, savePath, q, timeGIWAXS, intGIWAXS, energ
     
     return fig
 
-pkl_files = [
-        "D:/nanofibers/MAPbI3_nanofibers_S1/output/MAPbI3_nanofibers_S1.pkl",
-        "D:/nanofibers/MAPbI3_nanofibers_S2/output/MAPbI3_nanofibers_S2.pkl",
-        "D:/nanofibers/MAPbI3_nanofibers_S3/output/MAPbI3_nanofibers_S3.pkl",
-        "D:/nanofibers/MAPbI3_nanofibers_S4/output/MAPbI3_nanofibers_S4.pkl",
-        "D:/nanofibers/MAPbI3_nanofibers_S5/output/MAPbI3_nanofibers_S5.pkl",
-    ]
+# pkl_files = [
+#         "D:/nanofibers/MAPbI3_nanofibers_S1/output/MAPbI3_nanofibers_S1.pkl",
+#         "D:/nanofibers/MAPbI3_nanofibers_S2/output/MAPbI3_nanofibers_S2.pkl",
+#         "D:/nanofibers/MAPbI3_nanofibers_S3/output/MAPbI3_nanofibers_S3.pkl",
+#         "D:/nanofibers/MAPbI3_nanofibers_S4/output/MAPbI3_nanofibers_S4.pkl",
+#         "D:/nanofibers/MAPbI3_nanofibers_S5/output/MAPbI3_nanofibers_S5.pkl",
+#     ]
 
 for pkl_file in pkl_files:
     with open(pkl_file, 'rb') as f:

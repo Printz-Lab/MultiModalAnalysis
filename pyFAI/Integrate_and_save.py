@@ -269,6 +269,7 @@ def plot_Chi_2theta(image_file, poni_file, ax=None, label=None, calibrant_file=N
             x_values = (4.0e-9 * np.pi / calibrant.wavelength) * np.sin(0.5 * twotheta)
         if x_values is not None:
             for x, d_spacing, i in zip(x_values, d, range(len(x_values))):
+                print(f"d = {d_spacing:.4f} Å at x = {x:.2f} {unit}")
                 line = lines.Line2D(
                     [x, x],
                     [pos_azim.min(), pos_azim.max()],
@@ -404,9 +405,7 @@ def plot_QR_QZ(image_file, poni_file, ax=None, label=None, calibrant_file=None, 
                 fontsize=18,
             )
     return res2d
-    
 
-    return res2d
 
 
 # ========== Main execution block ==========
